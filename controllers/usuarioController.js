@@ -5,12 +5,12 @@ const { Op } = require('sequelize');
 //pegamos a entidade em si dessa forma usando .Genres
 const Usuario = require('../models').Usuario;
 
-//Cadastra Usuario (POST)
+// Cadastra Usuario (POST)
 router.post('/add', async (req, res) => {
     try {
         const { nome, email, senha } = req.body;
-        const newEdit = await Usuario.create({ nome, email, senha })
-        res.status(200).json({ message: 'Usuario Cadastrado com sucesso', usuario: newEdit });
+        const newUsuario = await Usuario.create({ nome, email, senha })
+        res.status(200).json({ message: 'Usuario Cadastrado com sucesso', usuario: newUsuario });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -19,8 +19,8 @@ router.post('/add', async (req, res) => {
 // Buscar todos os Usuarios
 router.get('/all', async (req, res) => {
     try {
-        const Usuario = await Usuario.findAll();
-        res.status(200).json(users);
+        const usuarios = await Usuario.findAll();
+        res.status(200).json(usuarios);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
