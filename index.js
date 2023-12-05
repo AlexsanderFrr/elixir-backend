@@ -11,7 +11,7 @@ const port = 8081;
 
 //importações
 //const genres = require('./controllers/genreController.js');
-//const movies = require('./controllers/movieController.js');
+//const sucos = require('./controllers/Controller.js');
 const usuario = require('./controllers/usuarioController.js');
 //const moviesGenres = require('./controllers/movieGenreController.js');
 //const usersRates = require('./controllers/userRateController.js');
