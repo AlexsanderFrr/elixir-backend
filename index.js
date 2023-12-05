@@ -7,15 +7,13 @@ const path = require('path');
 const cors = require('cors')
 const app = express();
 const port = 8081;
-//const uploadImg = require('./controllers/movieController.js')
+//const img = multer(uploadImg);
 
 //importações
-//const genres = require('./controllers/genreController.js');
-//const sucos = require('./controllers/Controller.js');
 const usuario = require('./controllers/usuarioController.js');
-//const moviesGenres = require('./controllers/movieGenreController.js');
-//const usersRates = require('./controllers/userRateController.js');
-//const img = multer(uploadImg);
+const sucos = require('./controllers/sucoController.js')
+const uploadImg = require('./controllers/sucoController.js')
+
 
 //Rotas
 app.use(bodyParser.json());
@@ -27,12 +25,10 @@ app.use(cors())
 app.get('/', (req, res) => res.send('HELLO WORLD, ROTA OK'))
 
 
-//app.use('/img', express.static(path.join(__dirname, 'uploads')));
+app.use('/img', express.static(path.join(__dirname, 'uploads')));
 
-//app.use('/rota-genres', genres);
-//app.use('/rota-movies', movies);
 app.use('/rota-usuario', usuario);
-//app.use('/rota-movies-genres', moviesGenres);
-//app.use('/rota-users-rates', usersRates);
+app.use('/rota-suco', sucos);
 
 app.listen(port, () => console.log(`Servidor rodando porta ${port}!`))
+
