@@ -129,6 +129,20 @@ router.put('/:id', upload.single('img1'), async (req, res)=> {
   }
 });
 
+//Deletar Suco por id
+router.delete('/:id', async (req,res)=>{
+  try{
+    await Suco.destroy({
+      where:{
+        id: req.params.id,
+      },
+    });
+    res.status(200).json({ message: 'Suco excluido com sucesso!'})
+  }catch(error){
+    res.status(400).json({error: error.message});
+  }
+});
+
 
 
 
