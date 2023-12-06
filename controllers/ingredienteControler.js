@@ -19,17 +19,39 @@ const storage = multer.diskStorage({
 const upload = multer({storage});
 const Ingredientes = require ('../models').Ingredientes;
 
-// Adicionar filme
-router.post('/add', upload.single('imagem'), async (req, res) => {
+// Adicionar Suco
+router.post('/add', upload.single('img'), async (req, res) => {
     try {
         const { nome, beneficios } = req.body;
 
         // Use o novo nome do arquivo que inclui o identificador único
         const newIngrediente = await Ingredientes.create({ nome, beneficios, img: req.file.filename });
 
-        res.status(200).json({ message: 'Filme Cadastrado com sucesso' });
+        res.status(200).json({ message: 'Ingrediente Cadastrado com sucesso' });
     } catch (error) {
         res.status(400).json({ error: error.message });
+    }
+});
+
+//Buscar todos os ingredientes
+router.get('/all', async (req, res)=>{
+    try{
+        const ingredientes = await Ingredientes.findAll();
+        const ingredientesWithImagePaths = ingredientes.map(ingredientes => {
+            if (ingredientes.img){
+                const imagePath = `/img/${ingredientes.img}`;
+                return{
+                    ...ingredientes.dataValues,
+                    img: imagePath,
+                };
+            }else{
+                return{ ...ingredientes.dataValues, img: null};
+            }
+        });
+        res.status(200).json(ingredientesWithImagePaths);
+    }catch (error){
+        console.error(error);
+        res.status(500).json({error: 'Erro interno no servidor'})
     }
 });
 
