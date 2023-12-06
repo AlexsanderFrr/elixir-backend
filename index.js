@@ -12,6 +12,7 @@ const port = 8081;
 //importações
 const usuario = require('./controllers/usuarioController.js');
 const sucos = require('./controllers/sucoController.js')
+const ingredientes = require ('./controllers/ingredienteControler.js')
 const uploadImg = require('./controllers/sucoController.js')
 
 
@@ -27,8 +28,9 @@ app.get('/', (req, res) => res.send('HELLO WORLD, ROTA OK'))
 
 app.use('/img', express.static(path.join(__dirname, 'uploads')));
 
-app.use('/rota-usuario', usuario);
-app.use('/rota-suco', sucos);
+app.use('/usuario', usuario);
+app.use('/suco', sucos);
+app.use('/ingredientes', ingredientes)
 
 app.listen(port, () => console.log(`Servidor rodando porta ${port}!`))
 

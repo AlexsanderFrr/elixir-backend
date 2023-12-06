@@ -6,7 +6,7 @@ const timestamp = new Date().getTime();
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, './uploads'); 
+    cb(null, './uploads/imgsSucos'); 
   },
   filename: function (req, file, cb) {
     const uniqueIdentifier = `${timestamp}_${randomNumber}_`;
@@ -19,14 +19,13 @@ const upload = multer({ storage });
 const Suco = require('../models').Suco;
 
 // Adicionar suco
-router.post('/add', upload.array('img', 2), async (req, res) => {
+router.post('/add', upload.single('img1'), async (req, res) => {
     try {
-        const { nome, ingredientes, modo_de_preparo, beneficios } = req.body;
+        const { nome, ingredientes, modo_de_preparo, beneficios, img1 } = req.body;
 
         // Use os novos nomes dos arquivos que incluem os identificadores únicos
-        const [img1, img2] = req.files.map((file) => file.filename);
 
-        const newSuco = await Suco.create({ nome, ingredientes, modo_de_preparo, beneficios, img1, img2 });
+        const newSuco = await Suco.create({ nome, ingredientes, modo_de_preparo, beneficios, img1: req.file.filename });
 
         res.status(200).json({ message: 'Suco Cadastrado com sucesso', suco: newSuco });
     } catch (error) {
