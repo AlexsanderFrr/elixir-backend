@@ -110,5 +110,26 @@ router.get('/title', async (req, res)=>{
   }
 });
 
+//alterar Suco por id (PUT)
+router.put('/:id', upload.single('img1'), async (req, res)=> {
+  try{
+    const { nome, ingredientes, modo_de_preparo, beneficios } = req.body;
+
+    const img1 = req.file ? req.file.filename : undefined;
+
+    await Suco.update(
+      {nome, ingredientes, modo_de_preparo, beneficios, img1},
+      {
+        where: { id: req.params.id},
+      }
+    );
+    res.status(200).json({ message: 'Suco atualizado com sucesso!'});
+  }catch(error){
+    res.status(400).json({error: error.message});
+  }
+});
+
+
+
 
 module.exports = router;
