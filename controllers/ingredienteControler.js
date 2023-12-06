@@ -55,5 +55,26 @@ router.get('/all', async (req, res)=>{
     }
 });
 
+//Busca por id ingredientes
+router.get('/:id', async (req, res)=>{
+    try{
+        const id = req.params.id;
+        const ingredientes = await Ingredientes.findByPk(id);
+
+        if (!suco){
+            throw new Error('Ingrediente não encontrado');
+        }
+
+        const imagePath = ingredientes.img ? `/img/${ingredientes.img}` : null;
+        const ingredientesWithImagePaths = {
+            ...ingredientes.dataValues,
+            img: imagePath,
+        };
+
+        res.status(200).json(ingredientesWithImagePaths);
+    }catch (error){
+        res.status(400).json({error: error.message});
+    }
+});
 
 module.exports = router;
