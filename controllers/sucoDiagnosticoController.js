@@ -34,4 +34,54 @@ router.get('/all', async (req, res) => {
     }
 });
 
+//Rota para obter suco diagnostico
+router.get('/:id', async (req,res) =>{
+    const {id} = req.params;
+    try{
+        const sucoDiagnosticos = await Suco_Diagnostico.sequelize.query("SELECT * FROM suco_diagnostico_all where id=:id", {replacements: {id: id}, type: Suco_Diagnostico.sequelize.QueryTypes.SELECT});
+        if (sucoDiagnosticos){
+            res.json(sucoDiagnosticos);
+        }else{
+            throw new Error('Suco e Diagnostico não encontrado!');
+        }
+    }catch(error){
+        res.status(400).json({error: error.message});
+    }
+});
+
+// Rota para obter suco diagnostico por ID ou por título
+router.get('/search/:title', async (req, res) => {
+    const { title } = req.params;
+
+    try {
+        const sucoDiagnosticos = await Suco_Diagnostico.sequelize.query(
+            `
+            SELECT * 
+            FROM suco_diagnosticos AS sd
+            INNER JOIN sucos AS s ON sd.fk_suco = s.id
+            INNER JOIN diagnosticos AS d ON sd.fk_diagnostico = d.id
+            WHERE s.nome LIKE :searchTerm 
+               OR d.nome_da_condicao LIKE :searchTerm
+            `,
+            {
+                replacements: { searchTerm: `%${title}%` },
+                type: Suco_Diagnostico.sequelize.QueryTypes.SELECT
+            }
+        );
+
+        if (sucoDiagnosticos.length > 0) {
+            res.json(sucoDiagnosticos);
+        } else {
+            throw new Error('Nenhum resultado encontrado para o termo de pesquisa.');
+        }
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+
+
+
+
+
 module.exports = router;
