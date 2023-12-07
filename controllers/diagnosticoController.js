@@ -52,4 +52,18 @@ router.put('/:id', async (req, res)=> {
     }
 });
 
+//Deletar diagnostico por id
+router.delete('/:id', async (req, res)=> {
+    try{
+        await Diagnostico.destroy({
+            where: {
+                id: req.params.id,
+            },
+        });
+        res.status(200).json({message: 'Diagnostico excluido com suceso!'})
+    }catch (error){
+        res.status(400).json({error: error.message});
+    }
+});
+
 module.exports = router;
