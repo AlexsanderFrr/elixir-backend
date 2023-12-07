@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
 const upload = multer({storage});
 const Ingredientes = require ('../models').Ingredientes;
 
-// Adicionar Suco
+// Adicionar Ingrediente
 router.post('/add', upload.single('img'), async (req, res) => {
     try {
         const { nome, beneficios } = req.body;
@@ -73,6 +73,25 @@ router.get('/:id', async (req, res)=>{
 
         res.status(200).json(ingredientesWithImagePaths);
     }catch (error){
+        res.status(400).json({error: error.message});
+    }
+});
+
+//alterar Ingredientes por id 
+router.put('/:id', upload.single('img'), async (req, res)=>{
+    try{
+        const {nome, beneficios} = req.body;
+
+        const img = req.file ? req.file.filename : undefined;
+
+        await Ingredientes.update(
+            { nome, beneficios, img},
+            {
+                where: {id: req.params.id},
+            }
+        );
+        res.status(200).json({message: 'Ingrediente atualizado com sucesso'});
+    }catch(error){
         res.status(400).json({error: error.message});
     }
 });
