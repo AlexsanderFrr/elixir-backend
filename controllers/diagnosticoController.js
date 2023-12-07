@@ -36,4 +36,20 @@ router.get('/:id', async (req, res)=>{
     }
 });
 
+//Alterar diagnostico por id
+router.put('/:id', async (req, res)=> {
+    try{
+        const{nome_da_condicao, descricao} = req.body;
+        await Diagnostico.update(
+            { nome_da_condicao, descricao},
+            {
+                where: {id: req.params.id},
+            }
+        );
+        res.status(200).json({message: 'Diagnostico atualizado com sucesso'});
+    }catch (error){
+        res.status(400).json({error: error.message});
+    }
+});
+
 module.exports = router;
