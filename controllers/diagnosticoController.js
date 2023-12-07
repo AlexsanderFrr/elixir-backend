@@ -25,4 +25,15 @@ router.get('/all', async (req, res)=>{
     }
 });
 
+//Busca por id do diagnostico
+router.get('/:id', async (req, res)=>{
+    try{
+        const id = req.params;
+        const diagnostico = await Diagnostico.findByPk(req.params.id);
+        res.status(200).json(diagnostico);
+    }catch(error){
+        res.status(400).json({error: error.message});
+    }
+});
+
 module.exports = router;
