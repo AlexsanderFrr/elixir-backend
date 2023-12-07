@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Op } = require('sequelize');
 
-//pegamos a entidade em si dessa forma usando .Genres
+
 const Usuario = require('../models').Usuario;
 
 // Cadastra Usuario (POST)
