@@ -96,4 +96,18 @@ router.put('/:id', upload.single('img'), async (req, res)=>{
     }
 });
 
+//Deletar ingrediente por id
+router.delete('/:id', async (req, res)=>{
+    try{
+        await Ingredientes.destroy({
+            where:{
+                id: req.params.id,
+            },
+        });
+        res.status(200).json({ message: 'Ingrediente excluido com sucesso!'})
+    }catch(error){
+        res.status(400).json({error: error.message});
+    }
+});
+
 module.exports = router;
