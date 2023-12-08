@@ -119,6 +119,39 @@ router.get('/search/:title', async (req, res) => {
     }
 });
 
+// Rota para atualizar informações de AllInformations por ID
+router.put('/update/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { fk_suco, fk_diagnostico, ingredientes, diagnosticos } = req.body;
+  
+      // Certifique-se de que a instância do Sequelize está associada ao modelo corretamente
+      if (!sequelize) {
+        throw new Error('Sequelize instance not found on AllInformations model');
+      }
+  
+      // Verifique se a instância existe antes de tentar atualizar
+      const existingRecord = await AllInformations.findByPk(id);
+  
+      if (!existingRecord) {
+        throw new Error('Nenhuma informação encontrada para o ID fornecido.');
+      }
+  
+      // Atualize os campos necessários
+      existingRecord.fk_suco = fk_suco;
+      existingRecord.fk_diagnostico = fk_diagnostico;
+      existingRecord.ingredientes = JSON.stringify(ingredientes);
+      existingRecord.diagnosticos = JSON.stringify(diagnosticos);
+  
+      // Salve as alterações no banco de dados
+      await existingRecord.save();
+  
+      res.json(existingRecord);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
 
 
 
