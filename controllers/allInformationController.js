@@ -1,45 +1,52 @@
 const express = require('express');
+const multer = require('multer');
 const router = express.Router();
-const { AllInformations, sequelize } = require('../models');
+const { AllInformations, Suco, Ingrediente, Diagnostico, sequelize } = require('../models');
 const { check, validationResult } = require('express-validator');
 
+const randomNumber = Math.floor(Math.random() * 1000000);
+const timestamp = new Date().getTime();
 
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './uploads/imgsSucos');
+  },
+  filename: function (req, file, cb) {
+    const uniqueIdentifier = `${timestamp}_${randomNumber}_`;
+    const newFileName = uniqueIdentifier + file.originalname;
+    cb(null, newFileName);
+  }
+});
 
-//Rota para criar um novo All Information
-router.post(
-  '/add/:fk_suco',
-  [
-    check('ingredientes')
-      .isArray()
-      .withMessage('O campo ingredientes deve ser um array de IDs de ingredientes'),
-    check('diagnosticos')
-      .isArray()
-      .withMessage('O campo diagnosticos deve ser um array de IDs de diagnosticos'),
-  ],
-  async (req, res) => {
-    try {
-      const errors = validationResult(req);
+const upload = multer({ storage });
 
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
+// Adicionar suco
+router.post('/add', upload.single('img1'), async (req, res) => {
+  try {
+    const { nome, ingredientes, modo_de_preparo, beneficios } = req.body;
+    const sucoImg1 = req.file.filename;
 
-      const { fk_suco, fk_diagnostico } = req.params;
-      const { ingredientes, diagnosticos } = req.body;
+    // Consultar informações completas de ingredientes pelos IDs
+    const ingredientesInfo = await Promise.all(ingredientes.map(id => Ingrediente.findByPk(id)));
 
-      // Crie uma nova instância de AllInformations com os arrays ingredientes e diagnosticos
-      const allInformation = await AllInformations.create({
-        fk_suco,
-        fk_diagnostico,
-        ingredientes: JSON.stringify(ingredientes),
-        diagnosticos: JSON.stringify(diagnosticos),
-      });
+    // Crie o suco no banco de dados com as informações completas
+    const newSuco = await Suco.create({ nome, modo_de_preparo, beneficios, img1: sucoImg1 });
 
-      res.json(allInformation);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
-  });
+    // Associe os ingredientes ao novo suco
+    await newSuco.setIngredientes(ingredientesInfo);
+
+    // Adicione informações na tabela AllInformations
+    const allInformation = await AllInformations.create({
+      fk_suco: newSuco.id,
+      fk_diagnostico: null, // Adapte isso se necessário
+      fk_ingredientes: ingredientes, // Adaptar se necessário
+    });
+
+    res.status(200).json({ message: 'Suco Cadastrado com sucesso', suco: newSuco, allInformation });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 
   //Rota para bucar todos os sucos e suas informações
   router.get('/all', async (req, res) => {

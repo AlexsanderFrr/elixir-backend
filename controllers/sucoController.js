@@ -16,22 +16,41 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
-const Suco = require('../models').Suco;
+const { Suco, Diagnostico,Suco_Diagnostico, sequelize } = require('../models');
+
 
 // Adicionar suco
 router.post('/add', upload.single('img1'), async (req, res) => {
-    try {
-        const { nome, ingredientes, modo_de_preparo, beneficios, img1 } = req.body;
+  try {
+    const { nome, ingredientes, modo_de_preparo, beneficios, img1, diagnostico } = req.body;
 
-        // Use os novos nomes dos arquivos que incluem os identificadores únicos
+    const suco = await Suco.create({
+      nome,
+      ingredientes,
+      modo_de_preparo,
+      beneficios,
+      img1: req.file.filename,
+    });
 
-        const newSuco = await Suco.create({ nome, ingredientes, modo_de_preparo, beneficios, img1: req.file.filename });
+    // Associar diagnóstico ao suco na tabela Suco_Diagnostico
+    if (diagnostico) {
+      // Mapear ID do diagnóstico para um objeto de diagnóstico
+      const diagnosticoObj = await Diagnostico.findByPk(diagnostico);
 
-        res.status(200).json({ message: 'Suco Cadastrado com sucesso', suco: newSuco });
-    } catch (error) {
-        res.status(400).json({ error: error.message });
+      // Associar o diagnóstico ao suco na tabela Suco_Diagnostico
+      await Suco_Diagnostico.create({ fk_suco: suco.id, fk_diagnostico: diagnosticoObj.id });
+
+      // Incluir informações sobre o diagnóstico no retorno
+      suco.diagnostico = diagnosticoObj;
     }
+
+    res.status(200).json({ message: 'Suco Cadastrado com sucesso', suco });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
+
+
 
 //Buscar todos os Sucos
 router.get('/all', async (req, res)=>{
