@@ -60,6 +60,33 @@ router.post(
     }
 });
 
+// Rota para obter informações de AllInformations por ID
+router.get('/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Certifique-se de que a instância do Sequelize está associada ao modelo corretamente
+        if (!sequelize) {
+            throw new Error('Sequelize instance not found on AllInformations model');
+        }
+
+        // Faça a consulta SQL utilizando o Sequelize
+        const allInformation = await sequelize.query("SELECT * FROM viewallinformation WHERE id = :id", {
+            replacements: { id },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (allInformation.length > 0) {
+            res.json(allInformation);
+        } else {
+            throw new Error('Nenhuma informação encontrada para o ID fornecido.');
+        }
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+
+
 
 
 module.exports = router;
