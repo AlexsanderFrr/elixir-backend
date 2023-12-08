@@ -85,6 +85,40 @@ router.get('/:id', async (req, res) => {
     }
 });
 
+// Rota para obter informações de AllInformations por ID ou por título
+router.get('/search/:title', async (req, res) => {
+    const { title } = req.params;
+
+    try {
+        // Certifique-se de que a instância do Sequelize está associada ao modelo corretamente
+        if (!sequelize) {
+            throw new Error('Sequelize instance not found on AllInformations model');
+        }
+
+        // Faça a consulta SQL utilizando o Sequelize
+        const allInformation = await sequelize.query(
+            `
+            SELECT * 
+            FROM viewallinformation
+            WHERE nome_suco LIKE :searchTerm 
+               OR nome_da_condicao LIKE :searchTerm
+            `,
+            {
+                replacements: { searchTerm: `%${title}%` },
+                type: sequelize.QueryTypes.SELECT
+            }
+        );
+
+        if (allInformation.length > 0) {
+            res.json(allInformation);
+        } else {
+            throw new Error('Nenhum resultado encontrado para o termo de pesquisa.');
+        }
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
 
 
 
