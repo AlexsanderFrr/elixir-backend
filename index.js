@@ -29,7 +29,7 @@ app.use(cors())
 app.get('/', (req, res) => res.send('HELLO WORLD, ROTA OK'))
 
 
-app.use('/img', express.static(path.join(__dirname, 'uploads')));
+app.use('/img', express.static(path.join(__dirname, 'uploads/imgsSucos')));
 
 app.use('/usuario', usuario);
 app.use('/suco', sucos);

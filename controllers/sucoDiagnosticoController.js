@@ -18,21 +18,31 @@ router.post('/add/:fk_suco/:fk_diagnostico', async (req, res)=>{
 // Rota para buscar todos os sucos e seus diagnósticos
 router.get('/all', async (req, res) => {
     try {
-        // Certifique-se de que a instância do Sequelize está associada ao modelo corretamente
-        if (!sequelize) {
-            throw new Error('Sequelize instance not found on Suco_Diagnostico model');
-        }
-
-        // Faça a consulta SQL utilizando o Sequelize
-        const sucoDiagnosticos = await sequelize.query("SELECT * FROM suco_diagnostico_all", {
-            type: sequelize.QueryTypes.SELECT
-        });
-
-        res.json(sucoDiagnosticos);
+      // Certifique-se de que a instância do Sequelize está associada ao modelo corretamente
+      if (!sequelize) {
+        throw new Error('Sequelize instance not found on Suco_Diagnostico model');
+      }
+  
+      // Faça a consulta SQL utilizando o Sequelize
+      const sucoDiagnosticos = await sequelize.query("SELECT * FROM suco_diagnostico_all", {
+        type: sequelize.QueryTypes.SELECT
+      });
+  
+      // Mapeie a URL da imagem para cada sucoDiagnostico
+      const sucosWithImagePaths = sucoDiagnosticos.map(sucoDiagnostico => {
+        const imagePath = `/img/${sucoDiagnostico.img1}`;
+        return {
+          ...sucoDiagnostico,
+          img1: imagePath,
+        };
+      });
+  
+      res.json(sucosWithImagePaths);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error.message });
     }
-});
+  });
+  
 
 //Rota para obter suco diagnostico
 router.get('/:id', async (req,res) =>{
