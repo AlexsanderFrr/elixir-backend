@@ -152,6 +152,32 @@ router.put('/update/:id', async (req, res) => {
     }
   });
 
+  // Rota para excluir informações de AllInformations por ID
+router.delete('/delete/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+  
+      // Certifique-se de que a instância do Sequelize está associada ao modelo corretamente
+      if (!sequelize) {
+        throw new Error('Sequelize instance not found on AllInformations model');
+      }
+  
+      // Verifique se a instância existe antes de tentar excluir
+      const existingRecord = await AllInformations.findByPk(id);
+  
+      if (!existingRecord) {
+        throw new Error('Nenhuma informação encontrada para o ID fornecido.');
+      }
+  
+      // Exclua o registro do banco de dados
+      await existingRecord.destroy();
+  
+      res.json({ message: 'Registro excluído com sucesso.' });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
 
 
 
