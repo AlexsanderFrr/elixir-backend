@@ -11,7 +11,7 @@ router.post('/add', async (req, res)=> {
         const newDiagnostico = await Diagnostico.create({nome_da_condicao, descricao})
         res.status(200).json({message: 'Diagnostico cadastrado com sucesso!'});
     }catch (error){
-        res.status(200).useChunkedEncodingByDefault({error: error.message});
+        res.status(400).json({ error: error.message });
     }
 });
 
