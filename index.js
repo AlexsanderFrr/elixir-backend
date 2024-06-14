@@ -26,7 +26,7 @@ app.use(cors())
 
 
 
-app.get('/', (req, res) => res.send('HELLO WORLD, ROTA OK'))
+app.get('/', (req, res) => res.send('HELLO WORLD, ROTAS OK'))
 
 
 app.use('/img', express.static(path.join(__dirname, 'uploads/imgsSucos')));
