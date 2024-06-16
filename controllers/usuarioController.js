@@ -10,7 +10,7 @@ router.post('/add', async (req, res) => {
     try {
         const { nome, email, senha } = req.body;
         const newUsuario = await Usuario.create({ nome, email, senha })
-        res.status(200).json({ message: 'Usuario Cadastrado com sucesso', usuario: newUsuario });
+        res.status(200).json({ message: 'Usuario Cadastrado com sucesso', Usuario: newUsuario });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
