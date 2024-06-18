@@ -20,6 +20,7 @@
     "sequelize": "^6.35.1"
   },
   "devDependencies": {
+    
     "jest": "^29.7.0",
     "sequelize-cli": "^6.6.2",
     "sequelize-mock": "^0.10.2",
