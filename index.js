@@ -38,5 +38,8 @@ app.use('/diagnostico', diagnostico)
 app.use('/sucodiagnosticos', sucodiagnostico)
 app.use('/allinformation', allinformation);
 
-app.listen(port, () => console.log(`Servidor rodando porta ${port}!`))
+const server = app.listen(port, () => {
+    console.log(`Servidor rodando porta ${port}!`);
+  });
 
+module.exports = server;
