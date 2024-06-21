@@ -82,5 +82,27 @@ describe('Testes para o Controlador de Diagnóstico', () => {
         expect(res.body[1].descricao).toBe('Descricao Teste 2');
         done();
       });
-  })
+  });
+
+  it('Deve alterar um diagnóstico', (done) => {
+    const idDiagnostico = 1;
+    const diagnosticoAtualizado = {
+      nome_da_condicao: 'Condicao Atualizada',
+      descricao: 'Descricao Atualizada'
+    };
+
+    // Mock da função update do modelo Diagnostico
+    Diagnostico.update.mockResolvedValue([1]); // Indica que uma linha foi afetada
+
+    request(app)
+      .put(`/diagnostico/${idDiagnostico}`)
+      .send(diagnosticoAtualizado)
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+        expect(res.body.message).toBe('Diagnostico atualizado com sucesso');
+        done();
+      });
+  });
+
 });
