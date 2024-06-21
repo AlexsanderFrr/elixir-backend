@@ -58,4 +58,29 @@ describe('Testes para o Controlador de Diagnóstico', () => {
         done();
       });
   });
+
+  it('Deve listar todos os diagnósticos', (done) => {
+    const mockDiagnostico = [
+      { id: 1, nome_da_condicao: 'Condicao Teste 1', descricao: 'Descricao Teste 1'},
+      { id: 2, nome_da_condicao: 'Condicao Teste 2', descricao: 'Descricao Teste 2'}
+    ];
+
+    // Mock da função findAll do modelo Diagnostico
+    Diagnostico.findAll.mockResolvedValue(mockDiagnostico);
+
+    request(app)
+      .get(`/diagnostico/all`)
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+        expect(res.body.length).toBe(2);
+        expect(res.body[0].id).toBe(1);
+        expect(res.body[0].nome_da_condicao).toBe('Condicao Teste 1');
+        expect(res.body[0].descricao).toBe('Descricao Teste 1');
+        expect(res.body[1].id).toBe(2);
+        expect(res.body[1].nome_da_condicao).toBe('Condicao Teste 2');
+        expect(res.body[1].descricao).toBe('Descricao Teste 2');
+        done();
+      });
+  })
 });
