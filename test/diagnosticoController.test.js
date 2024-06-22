@@ -104,5 +104,19 @@ describe('Testes para o Controlador de Diagnóstico', () => {
         done();
       });
   });
+  it('Deve deletar um diagnóstico', (done) => {
+    const idDiagnostico = 1;
 
+    // Mock da função destroy do modelo Diagnostico
+    Diagnostico.destroy.mockResolvedValue(1); // Indica que uma linha foi removida
+
+    request(app)
+      .delete(`/diagnostico/${idDiagnostico}`)
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+        expect(res.body.message).toBe('Diagnostico excluido com suceso!');
+        done();
+      });
+  });
 });
