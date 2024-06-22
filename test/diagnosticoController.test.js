@@ -114,8 +114,8 @@ describe('Testes para o Controlador de Diagnóstico', () => {
       .delete(`/diagnostico/${idDiagnostico}`)
       .expect(200)
       .end((err, res) => {
-        if(err) return done(err);
-        expect(res.body.message).toBe('Diagnostico excluído com sucesso!');
+        if (err) return done(err);
+        expect(res.body.message).toBe('Diagnostico excluido com suceso!');
         done();
       });
   });
