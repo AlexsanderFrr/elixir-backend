@@ -58,4 +58,65 @@ describe('Testes para o Controlador de Diagnóstico', () => {
         done();
       });
   });
+
+  it('Deve listar todos os diagnósticos', (done) => {
+    const mockDiagnostico = [
+      { id: 1, nome_da_condicao: 'Condicao Teste 1', descricao: 'Descricao Teste 1'},
+      { id: 2, nome_da_condicao: 'Condicao Teste 2', descricao: 'Descricao Teste 2'}
+    ];
+
+    // Mock da função findAll do modelo Diagnostico
+    Diagnostico.findAll.mockResolvedValue(mockDiagnostico);
+
+    request(app)
+      .get(`/diagnostico/all`)
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+        expect(res.body.length).toBe(2);
+        expect(res.body[0].id).toBe(1);
+        expect(res.body[0].nome_da_condicao).toBe('Condicao Teste 1');
+        expect(res.body[0].descricao).toBe('Descricao Teste 1');
+        expect(res.body[1].id).toBe(2);
+        expect(res.body[1].nome_da_condicao).toBe('Condicao Teste 2');
+        expect(res.body[1].descricao).toBe('Descricao Teste 2');
+        done();
+      });
+  });
+
+  it('Deve alterar um diagnóstico', (done) => {
+    const idDiagnostico = 1;
+    const diagnosticoAtualizado = {
+      nome_da_condicao: 'Condicao Atualizada',
+      descricao: 'Descricao Atualizada'
+    };
+
+    // Mock da função update do modelo Diagnostico
+    Diagnostico.update.mockResolvedValue([1]); // Indica que uma linha foi afetada
+
+    request(app)
+      .put(`/diagnostico/${idDiagnostico}`)
+      .send(diagnosticoAtualizado)
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+        expect(res.body.message).toBe('Diagnostico atualizado com sucesso');
+        done();
+      });
+  });
+  it('Deve deletar um diagnóstico', (done) => {
+    const idDiagnostico = 1;
+
+    // Mock da função destroy do modelo Diagnostico
+    Diagnostico.destroy.mockResolvedValue(1); // Indica que uma linha foi removida
+
+    request(app)
+      .delete(`/diagnostico/${idDiagnostico}`)
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+        expect(res.body.message).toBe('Diagnostico excluido com suceso!');
+        done();
+      });
+  });
 });
