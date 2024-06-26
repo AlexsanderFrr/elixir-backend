@@ -107,5 +107,21 @@ describe('Testes para o Controlador de Suco', () => {
       });
   });
 
+  it('Deve deletar um Suco', async () => {
+    const idSuco = 1;
+
+    // Mock da função destroy do modelo Suco
+    Suco.destroy.mockResolvedValue(1); // Indica que uma linha foi removida
+
+    request(app)
+      .delete(`/sucos/${idSuco}`)
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+        expect(res.body.message).toBe('Suco excluido com sucesso!');
+        done();
+      });
+  });
+
 
 });
