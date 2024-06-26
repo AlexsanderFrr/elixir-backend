@@ -11,7 +11,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use('/ingredientes', ingredienteRouter);
 
-describe('Testes para o Controlador de Ingredientes', () => {
+describe('Testes para o Controlador de Ingrediente', () => {
   beforeEach(() => {
     delete require.cache[require.resolve('../controllers/ingredienteControler')];
     jest.clearAllMocks();
