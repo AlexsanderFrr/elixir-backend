@@ -1,13 +1,12 @@
-FROM node:20.11
+FROM node:latest
 
 WORKDIR /api
 
-COPY package*.json ./
-
-RUN npm install
-
 COPY . .
 
-EXPOSE 8081
+RUN rm -rf node_modules
+RUN npm install
 
 CMD ["npm", "start"]
+
+EXPOSE 8081
