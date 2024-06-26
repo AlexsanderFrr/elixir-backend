@@ -25,11 +25,16 @@ describe('Testes para o Controlador de Ingredientes', () => {
 
     Ingrediente.create.mockResolvedValue(novoIngrediente);
 
-    const response = await request(app)
+     request(app)
       .post('/ingredientes/add')
       .send(novoIngrediente)
-      .expect(200);
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+        expect(response.body.message).toBe('Ingrediente Cadastrado com sucesso');
+        done();
+      });
 
-    expect(response.body.message).toBe('Ingrediente Cadastrado com sucesso');
+    
   });
 });
