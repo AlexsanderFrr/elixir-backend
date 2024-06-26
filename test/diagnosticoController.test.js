@@ -104,7 +104,7 @@ describe('Testes para o Controlador de Diagnóstico', () => {
         done();
       });
   });
-  it('Deve deletar um diagnóstico', (done) => {
+  it('Deve deletar um diagnóstico', async () => {
     const idDiagnostico = 1;
 
     // Mock da função destroy do modelo Diagnostico
@@ -115,7 +115,7 @@ describe('Testes para o Controlador de Diagnóstico', () => {
       .expect(200)
       .end((err, res) => {
         if (err) return done(err);
-        expect(res.body.message).toBe('Diagnostico excluido com suceso!');
+        expect(res.body.message).toBe('Diagnostico excluido com sucesso!');
         done();
       });
   });
