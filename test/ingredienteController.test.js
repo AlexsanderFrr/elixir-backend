@@ -89,4 +89,26 @@ describe('Testes para o Controlador de Ingredientes', () => {
       });
   });
 
+  it('Deve alterar um ingrediente', async () => {
+    const idIngrediente = 1;
+    const ingredienteAtualizado = {
+      nome: 'Ingrediente Atualizado',
+      beneficios: 'Beneficios Atualizado', 
+      img: 'imagem Atualizada'
+    };
+
+    // Mock da função update do modelo Ingrediente
+    Ingrediente.update.mockResolvedValue([1]); // Indica que uma linha foi afetada
+
+    request(app)
+      .put(`/ingrediente/${idIngrediente}`)
+      .send(ingredienteAtualizado)
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+        expect(res.body.message).toBe('Ingrediente atualizado com sucesso');
+        done();
+      });
+  });
+
 });
