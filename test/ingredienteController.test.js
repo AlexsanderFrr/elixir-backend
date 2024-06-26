@@ -111,4 +111,20 @@ describe('Testes para o Controlador de Ingredientes', () => {
       });
   });
 
+  it('Deve deletar um ingrediente', async () => {
+    const idIngrediente = 1;
+
+    // Mock da função destroy do modelo Ingrediente
+    Ingrediente.destroy.mockResolvedValue(1); // Indica que uma linha foi removida
+
+    request(app)
+      .delete(`/ingrediente/${idIngrediente}`)
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+        expect(res.body.message).toBe('Ingrediente excluido com sucesso!');
+        done();
+      });
+  });
+
 });
