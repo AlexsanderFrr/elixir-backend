@@ -16,7 +16,7 @@ describe('Testes para o Controlador de Diagnóstico', () => {
     jest.clearAllMocks(); // Limpa todos os mocks antes de cada teste
   });
 
-  it('Deve cadastrar um novo diagnóstico', (done) => {
+  it('Deve cadastrar um novo diagnóstico', async () => {
     const novoDiagnostico = {
       nome_da_condicao: 'Condicao Teste',
       descricao: 'Descricao Teste'
@@ -36,7 +36,7 @@ describe('Testes para o Controlador de Diagnóstico', () => {
       });
   });
 
-  it('Deve recuperar um diagnóstico', (done) => {
+  it('Deve recuperar um diagnóstico', async () => {
     const idDiagnostico = 1;
     const mockDiagnostico = {
       id: idDiagnostico,
@@ -59,7 +59,7 @@ describe('Testes para o Controlador de Diagnóstico', () => {
       });
   });
 
-  it('Deve listar todos os diagnósticos', (done) => {
+  it('Deve listar todos os diagnósticos', async() => {
     const mockDiagnostico = [
       { id: 1, nome_da_condicao: 'Condicao Teste 1', descricao: 'Descricao Teste 1'},
       { id: 2, nome_da_condicao: 'Condicao Teste 2', descricao: 'Descricao Teste 2'}
@@ -84,7 +84,7 @@ describe('Testes para o Controlador de Diagnóstico', () => {
       });
   });
 
-  it('Deve alterar um diagnóstico', (done) => {
+  it('Deve alterar um diagnóstico', async () => {
     const idDiagnostico = 1;
     const diagnosticoAtualizado = {
       nome_da_condicao: 'Condicao Atualizada',
