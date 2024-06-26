@@ -11,7 +11,8 @@ jest.mock('../models');
 const app = express();
 app.use(bodyParser.json());
 app.use('/sucos', sucoRouter);
-
+ 
+//Teste cadastrar suco
 describe('Testes para o Controlador de Suco', () => {
     beforeEach(() => {
       delete require.cache[require.resolve('../controllers/sucoController')];
@@ -56,5 +57,31 @@ describe('Testes para o Controlador de Suco', () => {
         done();
       });
   });
+
+  //teste listar todosos sucos
+  it ('Deve listar todos os sucos', async () => {
+    const mockSucos = [
+      {id: 1, nome: 'suco de laranja', img1: 'suco1.png'},
+      {id: 2, nome: 'suco de uva', img1: 'suco2.png'},
+    ];
+
+    Suco.findAll.mockResolvedValue(mockSucos);
+    request(app)
+      .get(`/sucos/all`)
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+        expect(res.body.length).toBe(2);
+        expect(res.body[0].id).toBe(1);
+        expect(res.body[0].nome).toBe('suco de laranja');
+        expect(res.body[0].img1).toBe('suco1.png');
+        expect(res.body[1].id).toBe(2);
+        expect(res.body[1].nome).toBe('suco de uva');
+        expect(res.body[1].img1).toBe('suco2.png');
+        done();
+      });
+    
+  }); 
+
 
 });
