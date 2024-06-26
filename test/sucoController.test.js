@@ -83,5 +83,29 @@ describe('Testes para o Controlador de Suco', () => {
     
   }); 
 
+  it('Deve alterar um suco', async () => {
+    const idSuco = 1;
+    const sucoAtualizado = {
+      nome: 'Suco Atualizado',
+      ingredientes: 'Limão, água e açucar',
+      modo_de_preparo: 'cortar limão adiciona água e açucar',
+      beneficios: 'aumenta a imunidade', 
+      };
+
+      
+    // Mock da função update do modelo Ingredien
+    Suco.update.mockResolvedValue([1]); // Indica que uma linha foi afetada
+
+    request(app)
+      .put(`/sucos/${idSuco}`)
+      .send(sucoAtualizado)
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+        expect(res.body.message).toBe('Suco atualizado com sucesso');
+        done();
+      });
+  });
+
 
 });
