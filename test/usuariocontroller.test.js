@@ -50,4 +50,17 @@ describe('Testes para o Controlador de Usuarios', () => {
 
     expect(response.body).toEqual(mockUsuarios);
   });
+
+  it('Deve buscar um usuário por ID', async () => {
+    const id = 1;
+    const mockUsuario = { id, nome: 'Teste', email: 'teste@teste.com', senha: 'senha123' };
+
+    Usuario.findByPk.mockResolvedValue(mockUsuario);
+
+    const response = await request(app)
+      .get(`/usuario/${id}`)
+      .expect(200);
+
+    expect(response.body).toEqual(mockUsuario);
+  });
  });
