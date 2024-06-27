@@ -6,7 +6,7 @@ const path = require('path');
 
 const cors = require('cors')
 const app = express();
-const port = 8081;
+const port = 3000;
 //const img = multer(uploadImg);
 
 //importações
