@@ -78,5 +78,15 @@ describe('Testes para o Controlador de Usuarios', () => {
     expect(response.body.message).toBe('Usuario Atualizado com sucesso');
   });
 
-  
+  it('Deve excluir um usuário por ID', async () => {
+    const id = 1;
+
+    Usuario.destroy.mockResolvedValue(1);
+
+    const response = await request(app)
+      .delete(`/usuario/${id}`)
+      .expect(200);
+
+    expect(response.body.message).toBe('Usuario Excluído com sucesso');
+  });
  });
