@@ -35,4 +35,19 @@ describe('Testes para o Controlador de Usuarios', () => {
     expect(response.body.message).toBe('Usuario Cadastrado com sucesso');
     //expect(response.body.Usuario).toEqual(mockUsuario);
   });
+
+  it('Deve listar todos os usuários', async () => {
+    const mockUsuarios = [
+      { id: 1, nome: 'Teste 1', email: 'teste1@teste.com', senha: 'senha123' },
+      { id: 2, nome: 'Teste 2', email: 'teste2@teste.com', senha: 'senha123' }
+    ];
+
+    Usuario.findAll.mockResolvedValue(mockUsuarios);
+
+    const response = await request(app)
+      .get('/usuario/all')
+      .expect(200);
+
+    expect(response.body).toEqual(mockUsuarios);
+  });
  });
