@@ -63,4 +63,20 @@ describe('Testes para o Controlador de Usuarios', () => {
 
     expect(response.body).toEqual(mockUsuario);
   });
+
+  it('Deve atualizar um usuário por ID', async () => {
+    const id = 1;
+    const updatedData = { nome: 'Teste Atualizado', email: 'atualizado@teste.com', senha: 'novaSenha123' };
+
+    Usuario.update.mockResolvedValue([1]);
+
+    const response = await request(app)
+      .put(`/usuario/${id}`)
+      .send(updatedData)
+      .expect(200);
+
+    expect(response.body.message).toBe('Usuario Atualizado com sucesso');
+  });
+
+  
  });
