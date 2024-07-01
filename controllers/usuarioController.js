@@ -3,8 +3,8 @@ const router = express.Router();
 const { Op } = require('sequelize');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-
 const Usuario = require('../models').Usuario;
+const authenticateToken = require('../middlewares/authMiddleware');
 
 const SECRET_KEY = 'your_secret_key'; // Use uma chave secreta segura e armazenada em variáveis de ambiente
 
@@ -41,18 +41,6 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// Middleware de autenticação
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (token == null) return res.sendStatus(401);
-
-    jwt.verify(token, SECRET_KEY, (err, user) => {
-        if (err) return res.sendStatus(403);
-        req.user = user;
-        next();
-    });
-};
 
 // Buscar todos os Usuarios
 router.get('/all', authenticateToken, async (req, res) => {
