@@ -1,17 +1,17 @@
 const express = require('express');
 const multer = require('multer');
 const router = express.Router();
-const { AllInformations, Suco, Ingrediente, Diagnostico, sequelize } = require('../models');
+const { AllInformations, Suco, Ingrediente, sequelize } = require('../models');
 const { check, validationResult } = require('express-validator');
 
 const randomNumber = Math.floor(Math.random() * 1000000);
 const timestamp = new Date().getTime();
 
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
+  destination: (req, file, cb) => {
     cb(null, './uploads/imgsSucos');
   },
-  filename: function (req, file, cb) {
+  filename: (req, file, cb) => {
     const uniqueIdentifier = `${timestamp}_${randomNumber}_`;
     const newFileName = uniqueIdentifier + file.originalname;
     cb(null, newFileName);
@@ -20,14 +20,37 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+//Fução auxiliar para consultar informaçoes de ingredientes
+const getIngredientesInfo = async (ingredientes) => {
+  return Promise.all(ingredientes.map(id => Ingrediente.findByPk(id)));
+};
+
+//Middleware de validaçoes para criação e atualização de sucos
+const validateSuco =[
+  check('nome').notEmpty().withMessage('Nome é obrigatório'),
+  check('ingredientes').isArray().withMessage('Ingredientes são obrigatórios'),
+  check('modo_de_preparo').notEmpty().withMessage(' Modo de preparo é obrigatorio'),
+  check('beneficios').notEmpty().withMessage('Beneficios são obrigatorios'), 
+  (req, res, next) => {
+    const errors =validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({errors: errors.array() });
+  }
+  next();
+
+}
+
+];
+
+
 // Adicionar suco
-router.post('/add', upload.single('img1'), async (req, res) => {
+router.post('/add', upload.single('img1'), validateSuco, async (req, res) => {
   try {
     const { nome, ingredientes, modo_de_preparo, beneficios } = req.body;
     const sucoImg1 = req.file.filename;
 
     // Consultar informações completas de ingredientes pelos IDs
-    const ingredientesInfo = await Promise.all(ingredientes.map(id => Ingrediente.findByPk(id)));
+    const ingredientesInfo = await getIngredientesInfo(ingredientes);
 
     // Crie o suco no banco de dados com as informações completas
     const newSuco = await Suco.create({ nome, modo_de_preparo, beneficios, img1: sucoImg1 });
@@ -127,14 +150,17 @@ router.get('/search/:title', async (req, res) => {
 });
 
 // Rota para atualizar informações de AllInformations por ID
-router.put('/update/:id', async (req, res) => {
-    try {
+router.put('/update/:id', validateSuco, async (req, res) => {
+    
       const { id } = req.params;
       const { fk_suco, fk_diagnostico, ingredientes, diagnosticos } = req.body;
-  
+      try {
       // Certifique-se de que a instância do Sequelize está associada ao modelo corretamente
       if (!sequelize) {
         throw new Error('Sequelize instance not found on AllInformations model');
+        
+        
+        
       }
   
       // Verifique se a instância existe antes de tentar atualizar
