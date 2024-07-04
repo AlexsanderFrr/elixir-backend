@@ -1,12 +1,17 @@
+require('dotenv').config();
 const express = require('express');
 const router = express.Router();
 const { Op } = require('sequelize');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const passport = require('passport');
 const Usuario = require('../models').Usuario;
-const authenticateToken = require('../middlewares/authMiddleware');
+const { SECRET_KEY } = process.env;
 
-const SECRET_KEY = 'your_secret_key'; // Use uma chave secreta segura e armazenada em variáveis de ambiente
+const authenticateToken = passport.authenticate('jwt', { session: false });
+//const authenticateToken = require('../middlewares/authMiddleware');
+
+//const SECRET_KEY = 'your_secret_key'; // Use uma chave secreta segura e armazenada em variáveis de ambiente
 
 // Cadastra Usuario (POST)
 router.post('/add', async (req, res) => {
