@@ -18,7 +18,7 @@ const usuario = require('./controllers/usuarioController.js');
 const sucos = require('./controllers/sucoController.js')
 const ingredientes = require ('./controllers/ingredienteControler.js')
 const diagnostico = require('./controllers/diagnosticoController.js')
-const sucodiagnostico = require('./controllers/sucoDiagnosticoController.js')
+//const sucodiagnostico = require('./controllers/sucoDiagnosticoController.js')
 const allinformation = require('./controllers/allInformationController.js')
 const uploadImg = require('./controllers/sucoController.js')
 
@@ -40,7 +40,7 @@ app.use('/usuario', usuario);
 app.use('/suco', sucos);
 app.use('/ingredientes', ingredientes)
 app.use('/diagnostico', diagnostico)
-app.use('/sucodiagnosticos', sucodiagnostico)
+//app.use('/sucodiagnosticos', sucodiagnostico)
 app.use('/allinformation', allinformation);
 
 const server = app.listen(port, () => {
