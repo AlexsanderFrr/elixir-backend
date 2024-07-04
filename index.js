@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
+const passport = require('passport');
+const configurePassport = require('./middlewares/passportConfig.js');
 const path = require('path');
 //protocolo de comunicacão entre apis e outros serviços cors
 //CORS: autoriza para qualquer tipo de serviço (front-end, outras apis,etc)
@@ -8,6 +10,7 @@ const path = require('path');
 const cors = require('cors')
 const app = express();
 const port = 8081;
+configurePassport(passport);
 //const img = multer(uploadImg);
 
 //importações
@@ -22,6 +25,7 @@ const uploadImg = require('./controllers/sucoController.js')
 
 //Rotas
 app.use(bodyParser.json());
+app.use(passport.initialize());
 //Função CORS para a autorização do uso da API
 app.use(cors())
 
