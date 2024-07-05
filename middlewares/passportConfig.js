@@ -20,8 +20,8 @@ const strategy = new Strategy(options, async (payload, done) => {
   }
 });
 
-const configurePassport = (passport) => {
+const passportConfig = (passport) => {
   passport.use(strategy);
 };
 
-module.exports = configurePassport;
+module.exports = passportConfig;

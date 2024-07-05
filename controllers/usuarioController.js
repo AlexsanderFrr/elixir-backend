@@ -4,10 +4,10 @@ const router = express.Router();
 const { Op } = require('sequelize');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const passport = require('passport');
+const passport = require('../middlewares/passportConfig');
 const Usuario = require('../models').Usuario;
-const { SECRET_KEY } = process.env;
-
+//const { SECRET_KEY } = process.env;
+const SECRET_KEY = process.env.SECRET_KEY;
 const authenticateToken = passport.authenticate('jwt', { session: false });
 //const authenticateToken = require('../middlewares/authMiddleware');
 
