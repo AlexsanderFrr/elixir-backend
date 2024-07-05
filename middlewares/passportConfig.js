@@ -23,5 +23,5 @@ const strategy = new Strategy(options, async (payload, done) => {
 const passportConfig = (passport) => {
   passport.use(strategy);
 };
-
+//comentario teste
 module.exports = passportConfig;
