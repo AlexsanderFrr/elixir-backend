@@ -30,13 +30,15 @@ router.post('/login', async (req, res) => {
     try {
         const { email, senha } = req.body;
         const usuario = await Usuario.findOne({ where: { email } });
+
         if (!usuario) {
-            return res.status(400).json({ message: 'Email ou senha inválidos' });
+            return res.status(400).json({ message: 'Email inválido' });
         }
 
         const isPasswordValid = await bcrypt.compare(senha, usuario.senha);
+
         if (!isPasswordValid) {
-            return res.status(400).json({ message: 'Email ou senha inválidos' });
+            return res.status(400).json({ message: 'Senha inválida' });
         }
 
         const token = jwt.sign({ id: usuario.id }, SECRET_KEY, { expiresIn: '1h' });
