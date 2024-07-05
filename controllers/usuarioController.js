@@ -18,7 +18,7 @@ router.post('/add', async (req, res) => {
     try {
         const { nome, email, senha } = req.body;
         const hashedSenha = await bcrypt.hash(senha, 10); // Hash da senha
-        const newUsuario = await Usuario.create({ nome, email, senha: hashedSenha });
+        const newUsuario = await Usuario.create({ nome, email, senha });
         res.status(200).json({ message: 'Usuario Cadastrado com sucesso', usuario: newUsuario });
     } catch (error) {
         res.status(400).json({ error: error.message });
