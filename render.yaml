@@ -1,0 +1,9 @@
+services:
+  - name: elixir-backend
+    env:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8081
+    buildCommand: npm install && npm run build
+    startCommand: npx nodemon index.js
