@@ -9,8 +9,8 @@ const path = require('path');
 
 const cors = require('cors')
 const app = express();
-const port = 8081;
-configurePassport(passport);
+const port = process.env.PORT || 8081;
+//configurePassport(passport);
 //const img = multer(uploadImg);
 
 //importações
