@@ -4,6 +4,7 @@ const router = express.Router();
 const { Op } = require('sequelize');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const passport = require('passport');
 //const passport = require('../middlewares/passportConfig');
 const Usuario = require('../models').Usuario;
 //const { SECRET_KEY } = process.env;
@@ -15,7 +16,7 @@ const authenticateToken = require('../middlewares/authMiddleware');
 router.post('/add', async (req, res) => {
     try {
         const { nome, email, senha } = req.body;
-        const hashedSenha = await bcrypt.hash(senha, 10);
+        const hashedSenha = await bcrypt.hash(senha, 10); // Hash da senha
         const newUsuario = await Usuario.create({ nome, email, senha });
         res.status(200).json({ message: 'Usuario Cadastrado com sucesso', usuario: newUsuario });
     } catch (error) {

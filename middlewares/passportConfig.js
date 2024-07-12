@@ -1,4 +1,5 @@
 // config/passportConfig.js
+const passport = require('passport');
 const { Strategy, ExtractJwt } = require('passport-jwt');
 const { Usuario } = require('../models');
 const SECRET_KEY = process.env.SECRET_KEY;
@@ -23,5 +24,5 @@ const strategy = new Strategy(options, async (payload, done) => {
 const passportConfig = (passport) => {
   passport.use(strategy);
 };
-
+//comentario teste
 module.exports = passportConfig;
