@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const passport = require('passport');
 const configurePassport = require('./middlewares/passportConfig.js');
 const path = require('path');
+const multer = require('multer');
+
 //protocolo de comunicacão entre apis e outros serviços cors
 //CORS: autoriza para qualquer tipo de serviço (front-end, outras apis,etc)
 
