@@ -13,7 +13,7 @@ const cors = require('cors')
 const app = express();
 const port = process.env.PORT || 8081;
 configurePassport(passport);
-const img = multer(uploadImg);
+
 
 //importações
 const usuario = require('./controllers/usuarioController.js');
@@ -24,7 +24,8 @@ const diagnostico = require('./controllers/diagnosticoController.js')
 const allinformation = require('./controllers/allInformationController.js')
 const uploadImg = require('./controllers/sucoController.js')
 
-
+// Configuração do multer
+const img = multer(uploadImg);
 //Rotas
 app.use(bodyParser.json());
 app.use(passport.initialize());
