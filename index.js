@@ -4,16 +4,15 @@ const bodyParser = require('body-parser');
 const passport = require('passport');
 const configurePassport = require('./middlewares/passportConfig.js');
 const path = require('path');
-const multer = require('multer');
-
 //protocolo de comunicacão entre apis e outros serviços cors
 //CORS: autoriza para qualquer tipo de serviço (front-end, outras apis,etc)
 
 const cors = require('cors')
 const app = express();
 const port = process.env.PORT || 8081;
+//configurePassport(passport);
 configurePassport(passport);
-
+//const img = multer(uploadImg);
 
 //importações
 const usuario = require('./controllers/usuarioController.js');
@@ -24,8 +23,7 @@ const diagnostico = require('./controllers/diagnosticoController.js')
 const allinformation = require('./controllers/allInformationController.js')
 const uploadImg = require('./controllers/sucoController.js')
 
-// Configuração do multer
-const img = multer(uploadImg);
+
 //Rotas
 app.use(bodyParser.json());
 app.use(passport.initialize());
