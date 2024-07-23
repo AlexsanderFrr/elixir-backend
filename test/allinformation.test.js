@@ -79,8 +79,14 @@ describe('Testes para o Controlador de AllInformations', () => {
     };
 
     // Mock da função findByPk e save do modelo AllInformations
-    AllInformations.findByPk.mockResolvedValue(informacaoAtualizada);
-    AllInformations.save.mockResolvedValue({ ...informacaoAtualizada, id: idAllInformation });
+    /*AllInformation.findByPk.mockResolvedValue(informacaoAtualizada);
+    AllInformation.save.mockResolvedValue({...informacaoAtualizada, id:idAllInformation});*/
+
+    AllInformation.findByPk.mockResolvedValue({
+      ...informacaoAtualizada,
+      save: jest.fn().mockResolvedValue({...informacaoAtualizada, id: idAllInformation}),
+    }); 
+  
 
     // Chama a rota de atualizar informações
     request(app)
@@ -90,6 +96,40 @@ describe('Testes para o Controlador de AllInformations', () => {
       .end((err, res) => {
         if (err) return done(err);
         expect(res.body.message).toBe('Informações atualizadas com sucesso');
+        done();
+      });
+  });
+
+  // Teste para deletar informações
+  it('Deve deletar informações', async () => {
+    const idAllInformation = 1;
+
+    // Mock da função destroy do modelo AllInformations
+    AllInformation.destroy.mockResolvedValue(1); // Indica que uma linha foi removida
+
+    // Chama a rota de deletar informações
+    request(app)
+      .delete(`/allinformation/delete/${idAllInformation}`)
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+        expect(res.body.message).toBe('Informações excluídas com sucesso');
+        done();
+      });
+  });// Teste para deletar informações
+  it('Deve deletar informações', async () => {
+    const idAllInformation = 1;
+
+    // Mock da função destroy do modelo AllInformations
+    AllInformation.destroy.mockResolvedValue(1); // Indica que uma linha foi removida
+
+    // Chama a rota de deletar informações
+    request(app)
+      .delete(`/allinformation/delete/${idAllInformation}`)
+      .expect(200)
+      .end((err, res) => {
+        if (err) return done(err);
+        expect(res.body.message).toBe('Informações excluídas com sucesso');
         done();
       });
   });
