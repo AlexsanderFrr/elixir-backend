@@ -41,7 +41,7 @@ app.use('/usuario', usuario);
 app.use('/suco', sucos);
 app.use('/ingredientes', ingredientes)
 app.use('/diagnostico', diagnostico)
-//app.use('/sucodiagnosticos', sucodiagnostico)
+app.use('/sucodiagnosticos', sucodiagnostico)
 app.use('/allinformation', allinformation);
 
 const server = app.listen(port, () => {
