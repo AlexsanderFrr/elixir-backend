@@ -1,23 +1,23 @@
 {
   "development": {
-    "username": "root",
-    "password": "root",
-    "database": "elixirlocal",
-    "host": "localhost",
+    "username": "elixirsql",
+    "password": "elixirnatural",
+    "database": "elixir",
+    "host": "elixir.c322c4yyu9oc.us-east-1.rds.amazonaws.com",
     "dialect": "mysql"
   },
   "test": {
-    "username": "root",
-    "password": "root",
-    "database": "elixirlocal",
-    "host": "localhost",
+    "username": "elixirsql",
+    "password": "elixirnatural",
+    "database": "elixir",
+    "host": "elixir.c322c4yyu9oc.us-east-1.rds.amazonaws.com",
     "dialect": "mysql"
   },
   "production": {
-    "username": "root",
-    "password": "root",
-    "database": "elixirlocal",
-    "host": "localhost",
+   "username": "elixirsql",
+    "password": "elixirnatural",
+    "database": "elixir",
+    "host": "elixir.c322c4yyu9oc.us-east-1.rds.amazonaws.com",
     "dialect": "mysql"
   }
 }
