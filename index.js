@@ -8,6 +8,11 @@ const path = require('path');
 //CORS: autoriza para qualquer tipo de serviço (front-end, outras apis,etc)
 
 const cors = require('cors')
+
+const multer = require('multer');
+
+// Configuração do multer para uploads de arquivos
+const uploadImg = multer({ dest: 'uploads/imgsSucos/' });
 const app = express();
 const port = process.env.PORT || 8080;
 //configurePassport(passport);
@@ -21,7 +26,7 @@ const ingredientes = require ('./controllers/ingredienteControler.js')
 const diagnostico = require('./controllers/diagnosticoController.js')
 const sucodiagnostico = require('./controllers/sucoDiagnosticoController.js')
 const allinformation = require('./controllers/allInformationController.js')
-const uploadImg = require('./controllers/sucoController.js')
+//const uploadImg = require('./controllers/sucoController.js')
 
 
 //Rotas
