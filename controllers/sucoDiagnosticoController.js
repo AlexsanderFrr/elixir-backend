@@ -1,6 +1,24 @@
-const express = require('express');
+const express = require("express");
+const multer = require("multer");
 const router = express.Router();
+const randomNumber = Math.floor(Math.random() * 1000000);
+const timestamp = new Date().getTime();
+const { Op } = require("sequelize");
 const { Suco_Diagnostico, sequelize } = require('../models');
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "./uploads/imgsSucos");
+  },
+  filename: function (req, file, cb) {
+    const uniqueIdentifier = `${timestamp}_${randomNumber}_`;
+    const newFileName = uniqueIdentifier + file.originalname;
+    cb(null, newFileName);
+  },
+});
+
+const upload = multer({ storage });
+
 
 
 //Rota para criar um novo Suco Diagnostico
