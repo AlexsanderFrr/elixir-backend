@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
         this.setDataValue('senha', hashedPwd);
       },
     },
+    imagem: DataTypes.STRING, 
   }, {
     sequelize,
     modelName: 'Usuario',
