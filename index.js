@@ -4,48 +4,53 @@ const bodyParser = require('body-parser');
 const passport = require('passport');
 const configurePassport = require('./middlewares/passportConfig.js');
 const path = require('path');
-const cors = require('cors');
+//protocolo de comunicacão entre apis e outros serviços cors
+//CORS: autoriza para qualquer tipo de serviço (front-end, outras apis,etc)
 
+const cors = require('cors')
+
+const multer = require('multer');
+//const uploadImg = require('./controllers/sucoController.js')
+// Configuração do multer para uploads de arquivos
+//const upload = multer({ dest: 'uploads/imgsSucos/' });
 const app = express();
 const port = process.env.PORT || 8080;
-
-// Configuração do multer para uploads de arquivos
-const multer = require('multer');
-const upload = multer({ dest: 'uploads/imgsSucos/' });
-
-// Configuração do Passport
+//configurePassport(passport);
 configurePassport(passport);
+//const img = multer(uploadImg);
 
-// Importações dos controladores
+//importações
 const usuario = require('./controllers/usuarioController.js');
-const sucos = require('./controllers/sucoController.js');
-const ingredientes = require('./controllers/ingredienteControler.js');
-const diagnostico = require('./controllers/diagnosticoController.js');
-const sucodiagnostico = require('./controllers/sucoDiagnosticoController.js');
-const allinformation = require('./controllers/allInformationController.js');
+const sucos = require('./controllers/sucoController.js')
+const ingredientes = require ('./controllers/ingredienteControler.js')
+const diagnostico = require('./controllers/diagnosticoController.js')
+const sucodiagnostico = require('./controllers/sucoDiagnosticoController.js')
+const allinformation = require('./controllers/allInformationController.js')
+//const uploadImg = require('./controllers/sucoController.js')
 
-// Configurações do app
+
+//Rotas
 app.use(bodyParser.json());
 app.use(passport.initialize());
-app.use(cors());
+//Função CORS para a autorização do uso da API
+app.use(cors())
 
-// Rotas
-app.get('/', (req, res) => res.send('HELLO WORLD, ROTAS OK'));
 
-// Servir arquivos estáticos
+
+app.get('/', (req, res) => res.send('HELLO WORLD, ROTAS OK'))
+
+
 app.use('/img', express.static(path.join(__dirname, 'uploads/imgsSucos')));
 
-// Usar controladores
 app.use('/usuario', usuario);
-app.use('/suco', sucos); // Supondo que `sucoController.js` é onde você usa o multer
-app.use('/ingredientes', ingredientes);
-app.use('/diagnostico', diagnostico);
-app.use('/sucodiagnosticos', sucodiagnostico);
+app.use('/suco', sucos);
+app.use('/ingredientes', ingredientes)
+app.use('/diagnostico', diagnostico)
+app.use('/sucodiagnosticos', sucodiagnostico)
 app.use('/allinformation', allinformation);
 
-// Iniciar o servidor
 const server = app.listen(port, () => {
-  console.log(`Servidor rodando na porta ${port}!`);
-});
+    console.log(`Servidor rodando porta ${port}!`);
+  });
 
 module.exports = server;
