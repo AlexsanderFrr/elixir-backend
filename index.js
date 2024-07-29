@@ -10,9 +10,9 @@ const path = require('path');
 const cors = require('cors')
 
 const multer = require('multer');
-//const uploadImg = require('./controllers/sucoController.js')
-// Configuração do multer para uploads de arquivos
-//const upload = multer({ dest: 'uploads/imgsSucos/' });
+const uploadImg = require('./controllers/sucoController.js')
+ //Configuração do multer para uploads de arquivos
+const upload = multer({ dest: 'uploads/imgsSucos/' });
 const app = express();
 const port = process.env.PORT || 8080;
 //configurePassport(passport);
