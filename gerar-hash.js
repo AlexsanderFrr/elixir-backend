@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 
-const senha = "naoentreempanico";
+const senha = "naoentreempanicooo";
 
 bcrypt.hash(senha, 10, (err, hash) => {
     if (err) {
