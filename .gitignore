@@ -3,3 +3,4 @@ config/config.json
 gerar-hash.js
 comparar-senha.js
 test-bcrypt.js
+.env
