@@ -1,58 +1,64 @@
+// controllers/sucoController.js
+
 const express = require("express");
 const multer = require("multer");
+const { CopyObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
+const multerS3 = require("multer-s3");
+const s3 = require("../config/s3Setup"); // Importando o cliente S3 configurado
 const router = express.Router();
-const randomNumber = Math.floor(Math.random() * 1000000);
-const timestamp = new Date().getTime();
 const { Op } = require("sequelize");
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "./uploads/imgsSucos");
-  },
-  filename: function (req, file, cb) {
-    const uniqueIdentifier = `${timestamp}_${randomNumber}_`;
-    const newFileName = uniqueIdentifier + file.originalname;
-    cb(null, newFileName);
-  },
-});
-
-const upload = multer({ storage });
 const { Suco, Diagnostico, Suco_Diagnostico, sequelize } = require("../models");
+require('dotenv').config(); // Carregar variáveis do .env
+
+// Configuração do multer com multer-s3
+const upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: process.env.S3_BUCKET_NAME,
+    key: function (req, file, cb) {
+      cb(null, `${process.env.S3_BUCKET_FOLDER_SUCO}/${file.originalname}`);
+    }
+  })
+});
 
 // Adicionar suco
 router.post("/add", upload.single("img1"), async (req, res) => {
   try {
-    const {
-      nome,
-      ingredientes,
-      modo_de_preparo,
-      beneficios,
-      img1,
-      diagnostico,
-    } = req.body;
+    const { nome, ingredientes, modo_de_preparo, beneficios, diagnostico } = req.body;
 
-    const suco = await Suco.create({
-      nome,
-      ingredientes,
-      modo_de_preparo,
-      beneficios,
-      img1: req.file.filename,
-    });
+    const suco = await Suco.create({ nome, ingredientes, modo_de_preparo, beneficios });
 
-    // Associar diagnóstico ao suco na tabela Suco_Diagnostico
+    if (req.file) {
+      const newFileName = `${suco.id}_${req.file.originalname}`; // Nome da imagem com o ID
+      const imageUrl = `${process.env.S3_BASE_URL}${newFileName}`; // URL da imagem
+
+      await s3.send(new CopyObjectCommand({
+        Bucket: process.env.S3_BUCKET_NAME,
+        CopySource: `${process.env.S3_BUCKET_NAME}/${req.file.key}`,
+        Key: `${process.env.S3_BUCKET_FOLDER_SUCO}/${newFileName}`,
+      }));
+
+      await s3.send(new DeleteObjectCommand({
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: req.file.key
+      }));
+
+      suco.img1 = imageUrl; // Salva a URL da imagem
+    }
+
     if (diagnostico) {
-      // Mapear ID do diagnóstico para um objeto de diagnóstico
       const diagnosticoObj = await Diagnostico.findByPk(diagnostico);
-
-      // Associar o diagnóstico ao suco na tabela Suco_Diagnostico
       await Suco_Diagnostico.create({
         fk_suco: suco.id,
         fk_diagnostico: diagnosticoObj.id,
       });
-
-      // Incluir informações sobre o diagnóstico no retorno
       suco.diagnostico = diagnosticoObj;
     }
+
+    await Suco.update(
+      { img1: suco.img1 }, // Atualiza com a URL da imagem
+      { where: { id: suco.id } }
+    );
 
     res.status(200).json({ message: "Suco Cadastrado com sucesso", suco });
   } catch (error) {
@@ -60,58 +66,40 @@ router.post("/add", upload.single("img1"), async (req, res) => {
   }
 });
 
-//Buscar todos os Sucos
+
+// Obter todos os sucos
 router.get("/all", async (req, res) => {
   try {
     const suco = await Suco.findAll();
-
-    const sucosWithImagePaths = suco.map((suco) => {
-      if (suco.img1) {
-        const imagePath = `/img/${suco.img1}`;
-        return {
-          ...suco.dataValues,
-          img1: imagePath,
-        };
-      } else {
-        return { ...suco.dataValues, img1: null };
-      }
-    });
-    res.status(200).json(sucosWithImagePaths);
+    res.status(200).json(suco);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Erro interno no servidor" });
   }
 });
 
-//Busca por id Suco
+// Obter suco por ID
 router.get("/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const suco = await Suco.findByPk(id);
 
     if (!suco) {
-      throw new Error("Receita não encontrado");
+      throw new Error("Receita não encontrada");
     }
 
-    const imagePath = suco.img1 ? `/img/${suco.img1}` : null;
-    const sucosWithImagePaths = {
-      ...suco.dataValues,
-      img1: imagePath,
-    };
-
-    res.status(200).json(sucosWithImagePaths);
+    res.status(200).json(suco);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-// Rota para buscar um Suco através do título
+// Obter suco por título
 router.get("/title/:title", async (req, res) => {
-  // Obtenha o título da consulta
-  const { title } = req.params; // Use req.params em vez de req.query
+  const { title } = req.params;
 
   try {
-    const suco = await Suco.findAll({
+    const sucos = await Suco.findAll({
       where: {
         nome: {
           [Op.like]: `%${title}%`,
@@ -119,36 +107,23 @@ router.get("/title/:title", async (req, res) => {
       },
     });
 
-    const sucosWithImagePaths = suco.map((suco) => {
-      const imagePath = suco.img1 ? `/img/${suco.img1}` : null;
-      return {
-        ...suco.dataValues,
-        img1: imagePath,
-      };
-    });
-
-    if (sucosWithImagePaths.length > 0) {
-      res.json(sucosWithImagePaths);
+    if (sucos.length > 0) {
+      res.json(sucos);
     } else {
-      throw new Error(
-        "Nenhuma receita de suco encontrada com o título fornecido"
-      );
+      throw new Error("Nenhuma receita de suco encontrada com o título fornecido");
     }
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-// Rota para obter suco e diagnóstico associado por ID
+// Obter sucos com diagnóstico específico
 router.get("/with-diagnostico/:id", async (req, res) => {
   const sucoDiagnosticoId = req.params.id;
 
   try {
     const sucoDiagnostico = await Suco_Diagnostico.sequelize.query(
-      `
-      SELECT * 
-      FROM suco_diagnostico_all WHERE fk_suco = :id
-      `,
+      `SELECT * FROM suco_diagnostico_all WHERE fk_suco = :id`,
       {
         replacements: { id: sucoDiagnosticoId },
         type: Suco_Diagnostico.sequelize.QueryTypes.SELECT,
@@ -165,19 +140,15 @@ router.get("/with-diagnostico/:id", async (req, res) => {
   }
 });
 
-
-//alterar Suco por id (PUT)
+// Atualizar suco
 router.put("/:id", upload.single("img1"), async (req, res) => {
   try {
     const { nome, ingredientes, modo_de_preparo, beneficios } = req.body;
-
-    const img1 = req.file ? req.file.filename : undefined;
+    const img1 = req.file ? req.file.location : undefined;
 
     await Suco.update(
       { nome, ingredientes, modo_de_preparo, beneficios, img1 },
-      {
-        where: { id: req.params.id },
-      }
+      { where: { id: req.params.id } }
     );
     res.status(200).json({ message: "Suco atualizado com sucesso!" });
   } catch (error) {
@@ -185,15 +156,13 @@ router.put("/:id", upload.single("img1"), async (req, res) => {
   }
 });
 
-//Deletar Suco por id
+// Deletar suco
 router.delete("/:id", async (req, res) => {
   try {
     await Suco.destroy({
-      where: {
-        id: req.params.id,
-      },
+      where: { id: req.params.id },
     });
-    res.status(200).json({ message: "Suco excluido com sucesso!" });
+    res.status(200).json({ message: "Suco excluído com sucesso!" });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
