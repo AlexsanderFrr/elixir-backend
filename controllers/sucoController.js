@@ -2,13 +2,13 @@
 
 const express = require("express");
 const multer = require("multer");
-const { CopyObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
+const { DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const multerS3 = require("multer-s3");
-const s3 = require("../config/s3Setup"); // Importando o cliente S3 configurado
+const s3 = require("../config/s3Setup"); 
 const router = express.Router();
 const { Op } = require("sequelize");
 const { Suco, Diagnostico, Suco_Diagnostico, sequelize } = require("../models");
-require('dotenv').config(); // Carregar variáveis do .env
+require('dotenv').config(); 
 
 // Configuração do multer com multer-s3
 const upload = multer({
@@ -18,7 +18,8 @@ const upload = multer({
     key: function (req, file, cb) {
       cb(null, `${process.env.S3_BUCKET_FOLDER_SUCO}/${file.originalname}`);
     },
-    acl: 'public-read', // Adicionando acesso público para leitura
+    acl: 'public-read', 
+    contentType: multerS3.AUTO_CONTENT_TYPE, 
   }),
 });
 
@@ -33,7 +34,7 @@ router.post("/add", upload.single("img1"), async (req, res) => {
       const newFileName = `${suco.id}_${req.file.originalname}`;
       const imageUrl = `${process.env.S3_BASE_URL}${process.env.S3_BUCKET_FOLDER_SUCO}/${newFileName}`;
 
-      suco.img1 = imageUrl; // Salva a URL da imagem
+      suco.img1 = imageUrl; m
     }
 
     if (diagnostico) {
@@ -46,7 +47,7 @@ router.post("/add", upload.single("img1"), async (req, res) => {
     }
 
     await Suco.update(
-      { img1: suco.img1 }, // Atualiza com a URL da imagem
+      { img1: suco.img1 }, 
       { where: { id: suco.id } }
     );
 
