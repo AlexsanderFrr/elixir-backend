@@ -17,8 +17,9 @@ const upload = multer({
     bucket: process.env.S3_BUCKET_NAME,
     key: function (req, file, cb) {
       cb(null, `${process.env.S3_BUCKET_FOLDER_SUCO}/${file.originalname}`);
-    }
-  })
+    },
+    acl: 'public-read', // Adicionando acesso público para leitura
+  }),
 });
 
 // Adicionar suco
@@ -31,18 +32,6 @@ router.post("/add", upload.single("img1"), async (req, res) => {
     if (req.file) {
       const newFileName = `${suco.id}_${req.file.originalname}`;
       const imageUrl = `${process.env.S3_BASE_URL}${process.env.S3_BUCKET_FOLDER_SUCO}/${newFileName}`;
-
-      await s3.send(new CopyObjectCommand({
-        Bucket: process.env.S3_BUCKET_NAME,
-        CopySource: `${process.env.S3_BUCKET_NAME}/${req.file.key}`,
-        Key: `${process.env.S3_BUCKET_FOLDER_SUCO}/${newFileName}`,
-        ContentDisposition: "inline"
-      }));
-
-      await s3.send(new DeleteObjectCommand({
-        Bucket: process.env.S3_BUCKET_NAME,
-        Key: req.file.key
-      }));
 
       suco.img1 = imageUrl; // Salva a URL da imagem
     }
