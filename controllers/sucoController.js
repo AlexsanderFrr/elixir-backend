@@ -29,13 +29,14 @@ router.post("/add", upload.single("img1"), async (req, res) => {
     const suco = await Suco.create({ nome, ingredientes, modo_de_preparo, beneficios });
 
     if (req.file) {
-      const newFileName = `${suco.id}_${req.file.originalname}`; // Nome da imagem com o ID
-      const imageUrl = `${process.env.S3_BASE_URL}${newFileName}`; // URL da imagem
+      const newFileName = `${suco.id}_${req.file.originalname}`;
+      const imageUrl = `${process.env.S3_BASE_URL}/${process.env.S3_BUCKET_FOLDER_SUCO}/${newFileName}`;
 
       await s3.send(new CopyObjectCommand({
         Bucket: process.env.S3_BUCKET_NAME,
         CopySource: `${process.env.S3_BUCKET_NAME}/${req.file.key}`,
         Key: `${process.env.S3_BUCKET_FOLDER_SUCO}/${newFileName}`,
+        ContentDisposition: "inline"
       }));
 
       await s3.send(new DeleteObjectCommand({
