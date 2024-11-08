@@ -34,7 +34,7 @@ router.post("/add", upload.single("img1"), async (req, res) => {
       const newFileName = `${suco.id}_${req.file.originalname}`;
       const imageUrl = `${process.env.S3_BASE_URL}${process.env.S3_BUCKET_FOLDER_SUCO}/${newFileName}`;
 
-      suco.img1 = imageUrl; m
+      suco.img1 = imageUrl; 
     }
 
     if (diagnostico) {
