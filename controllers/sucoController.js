@@ -30,7 +30,7 @@ router.post("/add", upload.single("img1"), async (req, res) => {
 
     if (req.file) {
       const newFileName = `${suco.id}_${req.file.originalname}`;
-      const imageUrl = `${process.env.S3_BASE_URL}/${process.env.S3_BUCKET_FOLDER_SUCO}/${newFileName}`;
+      const imageUrl = `${process.env.S3_BASE_URL}${process.env.S3_BUCKET_FOLDER_SUCO}/${newFileName}`;
 
       await s3.send(new CopyObjectCommand({
         Bucket: process.env.S3_BUCKET_NAME,
