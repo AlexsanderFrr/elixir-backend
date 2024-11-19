@@ -2,13 +2,13 @@
 
 const express = require("express");
 const multer = require("multer");
-const { DeleteObjectCommand } = require("@aws-sdk/client-s3");
+const { DeleteObjectCommand, CopyObjectCommand } = require("@aws-sdk/client-s3");
 const multerS3 = require("multer-s3");
-const s3 = require("../config/s3Setup"); 
+const s3 = require("../config/s3Setup");
 const router = express.Router();
 const { Op } = require("sequelize");
 const { Suco, Diagnostico, Suco_Diagnostico, sequelize } = require("../models");
-require('dotenv').config(); 
+require("dotenv").config();
 
 // Configuração do multer com multer-s3
 const upload = multer({
@@ -16,27 +16,60 @@ const upload = multer({
     s3: s3,
     bucket: process.env.S3_BUCKET_NAME,
     key: function (req, file, cb) {
-      cb(null, `${process.env.S3_BUCKET_FOLDER_SUCO}/${file.originalname}`);
+      cb(null, `${process.env.S3_BUCKET_FOLDER_SUCO}/${file.originalname}`); // Salva o arquivo original no S3
     },
-    acl: 'public-read', 
-    contentType: multerS3.AUTO_CONTENT_TYPE, 
+    acl: "public-read",
+    contentType: multerS3.AUTO_CONTENT_TYPE,
   }),
 });
 
 // Adicionar suco
 router.post("/add", upload.single("img1"), async (req, res) => {
   try {
-    const { nome, ingredientes, modo_de_preparo, beneficios, diagnostico } = req.body;
+    const {
+      nome,
+      ingredientes,
+      modo_de_preparo,
+      beneficios,
+      diagnostico,
+    } = req.body;
 
-    const suco = await Suco.create({ nome, ingredientes, modo_de_preparo, beneficios });
+    // Cria o suco no banco de dados
+    const suco = await Suco.create({
+      nome,
+      ingredientes,
+      modo_de_preparo,
+      beneficios,
+      img1: req.file.key,  // Salva o nome original do arquivo no banco de dados
+    });
 
+    // Se a imagem foi carregada, renomeia e move para o S3 com o ID do suco
     if (req.file) {
-      const newFileName = `${suco.id}_${req.file.originalname}`;
-      const imageUrl = `${process.env.S3_BASE_URL}${process.env.S3_BUCKET_FOLDER_SUCO}/${newFileName}`;
+      const newFileName = `${suco.id}_${req.file.originalname}`; // Nome da imagem com o ID
+      const imageUrl = `${process.env.S3_BASE_URL}${process.env.S3_BUCKET_FOLDER_SUCO}/${newFileName}`; // URL da imagem
 
-      suco.img1 = imageUrl; 
+      // Copia o arquivo para o novo nome no S3
+      await s3.send(
+        new CopyObjectCommand({
+          Bucket: process.env.S3_BUCKET_NAME,
+          CopySource: `${process.env.S3_BUCKET_NAME}/${req.file.key}`,
+          Key: `${process.env.S3_BUCKET_FOLDER_SUCO}/${newFileName}`,
+        })
+      );
+
+      // Deleta o arquivo original do S3
+      await s3.send(
+        new DeleteObjectCommand({
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: req.file.key,
+        })
+      );
+
+      // Atualiza o suco com a URL da nova imagem
+      suco.img1 = imageUrl;
     }
 
+    // Associar diagnóstico ao suco na tabela Suco_Diagnostico
     if (diagnostico) {
       const diagnosticoObj = await Diagnostico.findByPk(diagnostico);
       await Suco_Diagnostico.create({
@@ -46,23 +79,24 @@ router.post("/add", upload.single("img1"), async (req, res) => {
       suco.diagnostico = diagnosticoObj;
     }
 
-    await Suco.update(
-      { img1: suco.img1 }, 
+    // Atualiza o suco no banco de dados com a URL da imagem
+    await suco.update(
+      { img1: suco.img1 },
       { where: { id: suco.id } }
     );
 
+    // Retorna o suco com sucesso
     res.status(200).json({ message: "Suco Cadastrado com sucesso", suco });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-
 // Obter todos os sucos
 router.get("/all", async (req, res) => {
   try {
-    const suco = await Suco.findAll();
-    res.status(200).json(suco);
+    const sucos = await Suco.findAll();
+    res.status(200).json(sucos);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Erro interno no servidor" });
@@ -101,7 +135,9 @@ router.get("/title/:title", async (req, res) => {
     if (sucos.length > 0) {
       res.json(sucos);
     } else {
-      throw new Error("Nenhuma receita de suco encontrada com o título fornecido");
+      throw new Error(
+        "Nenhuma receita de suco encontrada com o título fornecido"
+      );
     }
   } catch (error) {
     res.status(400).json({ error: error.message });
