@@ -1,64 +1,47 @@
-require("dotenv").config();
 const express = require("express");
+const multer = require("multer");
+const multerS3 = require("multer-s3");
+const { DeleteObjectCommand } = require("@aws-sdk/client-s3");
+const s3 = require("../config/s3Setup");
 const router = express.Router();
-const { Op } = require("sequelize");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const passport = require("passport");
-const Usuario = require("../models").Usuario;
-const SECRET_KEY = process.env.SECRET_KEY;
+const { Op } = require("sequelize");
+const { Usuario } = require("../models");
 const authenticateToken = require("../middlewares/authMiddleware");
-const multer = require("multer");
-const fs = require("fs");
-const path = require("path");
+require('dotenv').config();
 
-// Configuração do multer
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "./uploads/imgUsuario");
-  },
-  filename: function (req, file, cb) {
-    const uniqueIdentifier = `${timestamp}_${randomNumber}_`;
-    const newFileName = uniqueIdentifier + file.originalname;
-    cb(null, newFileName);
-  },
+// Configuração do multer com multer-s3
+const upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: process.env.S3_BUCKET_NAME,
+    key: function (req, file, cb) {
+      cb(null, `${process.env.S3_BUCKET_FOLDER_USER}/${file.originalname}`);
+    },
+    acl: 'public-read',
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+  }),
 });
-
-const upload = multer({ storage: storage });
-
-// Função para mover a imagem para a pasta imgUsuario
-const moveFile = (filePath, fileName) => {
-  const destinationDir = path.join(__dirname, "..", "imgUsuario");
-  if (!fs.existsSync(destinationDir)) {
-    fs.mkdirSync(destinationDir, { recursive: true });
-  }
-  const destinationPath = path.join(destinationDir, fileName);
-  fs.renameSync(filePath, destinationPath);
-  return destinationPath;
-};
 
 // Adicionar Usuario (POST)
 router.post("/add", upload.single("imagem"), async (req, res) => {
   try {
     const { nome, email, senha } = req.body;
     const hashedSenha = await bcrypt.hash(senha, 10);
-    
-    console.log('Hash gerado para a senha:', hashedSenha); // Adicione este log
 
-    let imagePath = null;
+    const newUsuario = await Usuario.create({ nome, email, senha: hashedSenha });
 
     if (req.file) {
-      const tempPath = req.file.path;
-      const fileName = req.file.filename;
-      imagePath = moveFile(tempPath, fileName);
-    }
+      const newFileName = `${newUsuario.id}_${req.file.originalname}`;
+      const imageUrl = `${process.env.S3_BASE_URL}${process.env.S3_BUCKET_FOLDER_USER}/${newFileName}`;
+      newUsuario.imagem = imageUrl;
 
-    const newUsuario = await Usuario.create({
-      nome,
-      email,
-      senha: hashedSenha,
-      imagem: imagePath,
-    });
+      await Usuario.update(
+        { imagem: imageUrl },
+        { where: { id: newUsuario.id } }
+      );
+    }
 
     res.status(200).json({ message: "Usuario Cadastrado com sucesso", usuario: newUsuario });
   } catch (error) {
@@ -66,25 +49,25 @@ router.post("/add", upload.single("imagem"), async (req, res) => {
   }
 });
 
-
 // Login (POST)
-router.post('/login', async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
-      const { email, senha } = req.body;
-      const usuario = await Usuario.findOne({ where: { email } });
-      if (!usuario) {
-          return res.status(400).json({ message: 'Email ou senha inválidos' });
-      }
+    const { email, senha } = req.body;
+    const usuario = await Usuario.findOne({ where: { email } });
 
-      const isPasswordValid = await bcrypt.compare(senha, usuario.senha);
-      if (!isPasswordValid) {
-          return res.status(400).json({ message: 'Email ou senha inválidos' });
-      }
+    if (!usuario) {
+      return res.status(400).json({ message: "Email ou senha inválidos" });
+    }
 
-      const token = jwt.sign({ id: usuario.id }, SECRET_KEY, { expiresIn: '1h' });
-      res.status(200).json({ message: 'Autenticado com sucesso', token });
+    const isPasswordValid = await bcrypt.compare(senha, usuario.senha);
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: "Email ou senha inválidos" });
+    }
+
+    const token = jwt.sign({ id: usuario.id }, process.env.SECRET_KEY, { expiresIn: '1h' });
+    res.status(200).json({ message: "Autenticado com sucesso", token });
   } catch (error) {
-      res.status(400).json({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 });
 
@@ -98,7 +81,7 @@ router.get("/all", authenticateToken, async (req, res) => {
   }
 });
 
-// Busca informações do usuário autenticado (GET)
+// Buscar informações do usuário autenticado (GET)
 router.get("/me", authenticateToken, async (req, res) => {
   try {
     const usuario = await Usuario.findByPk(req.user.id);
@@ -116,22 +99,26 @@ router.put("/me", upload.single("imagem"), async (req, res) => {
   try {
     const { nome, email, senha } = req.body;
     const hashedSenha = await bcrypt.hash(senha, 10);
-    await Usuario.update(
-      {
-        nome,
-        email,
-        senha: hashedSenha,
-        imagem: req.file ? req.file.filename : undefined, // Atualiza o caminho da imagem
-      },
-      { where: { id: req.user.id } }
-    );
+    const updatedData = {
+      nome,
+      email,
+      senha: hashedSenha,
+    };
+
+    if (req.file) {
+      const newFileName = `${req.user.id}_${req.file.originalname}`;
+      const imageUrl = `${process.env.S3_BASE_URL}${process.env.S3_BUCKET_FOLDER_USER}/${newFileName}`;
+      updatedData.imagem = imageUrl;
+    }
+
+    await Usuario.update(updatedData, { where: { id: req.user.id } });
     res.status(200).json({ message: "Usuario Atualizado com sucesso" });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-// Deletar Usuario por id (DELETE)
+// Deletar Usuario (DELETE)
 router.delete("/me", authenticateToken, async (req, res) => {
   try {
     await Usuario.destroy({ where: { id: req.user.id } });
