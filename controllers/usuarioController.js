@@ -1,7 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
-const { DeleteObjectCommand } = require("@aws-sdk/client-s3");
+const { DeleteObjectCommand, CopyObjectCommand } = require("@aws-sdk/client-s3");
 const s3 = require("../config/s3Setup");
 const router = express.Router();
 const bcrypt = require("bcrypt");
@@ -17,9 +17,9 @@ const upload = multer({
     s3: s3,
     bucket: process.env.S3_BUCKET_NAME,
     key: function (req, file, cb) {
-      cb(null, `${process.env.S3_BUCKET_FOLDER_USER}/${file.originalname}`);
+      cb(null, `${process.env.S3_BUCKET_FOLDER_USER}/${file.originalname}`); // Salva o arquivo original no S3
     },
-    acl: 'public-read',
+    acl: "public-read",
     contentType: multerS3.AUTO_CONTENT_TYPE,
   }),
 });
@@ -30,19 +30,79 @@ router.post("/add", upload.single("imagem"), async (req, res) => {
     const { nome, email, senha } = req.body;
     const hashedSenha = await bcrypt.hash(senha, 10);
 
+    // Criação do usuário
     const newUsuario = await Usuario.create({ nome, email, senha: hashedSenha });
 
     if (req.file) {
-      const newFileName = `${newUsuario.id}_${req.file.originalname}`;
+      const newFileName = `${newUsuario.id}_${req.file.originalname}`; // Nome correto da imagem com o ID
       const imageUrl = `${process.env.S3_BASE_URL}${process.env.S3_BUCKET_FOLDER_USER}/${newFileName}`;
+
+      // Copia o arquivo para o novo nome no S3
+      await s3.send(
+        new CopyObjectCommand({
+          Bucket: process.env.S3_BUCKET_NAME,
+          CopySource: `${process.env.S3_BUCKET_NAME}/${req.file.key}`,
+          Key: `${process.env.S3_BUCKET_FOLDER_USER}/${newFileName}`,
+        })
+      );
+
+      // Deleta o arquivo original do S3
+      await s3.send(
+        new DeleteObjectCommand({
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: req.file.key,
+        })
+      );
+
+      // Atualiza o usuário com a URL da imagem
       newUsuario.imagem = imageUrl;
 
-      await Usuario.update(
-        { imagem: imageUrl },
-        { where: { id: newUsuario.id } }
-      );
+      // Atualiza o banco de dados com a URL da imagem
+      await newUsuario.save();
     }
 
+    // Resposta com sucesso
+    res.status(200).json({ message: "Usuario Cadastrado com sucesso", usuario: newUsuario });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});router.post("/add", upload.single("imagem"), async (req, res) => {
+  try {
+    const { nome, email, senha } = req.body;
+    const hashedSenha = await bcrypt.hash(senha, 10);
+
+    // Criação do usuário
+    const newUsuario = await Usuario.create({ nome, email, senha: hashedSenha });
+
+    if (req.file) {
+      const newFileName = `${newUsuario.id}_${req.file.originalname}`; // Nome correto da imagem com o ID
+      const imageUrl = `${process.env.S3_BASE_URL}${process.env.S3_BUCKET_FOLDER_USER}/${newFileName}`;
+
+      // Copia o arquivo para o novo nome no S3
+      await s3.send(
+        new CopyObjectCommand({
+          Bucket: process.env.S3_BUCKET_NAME,
+          CopySource: `${process.env.S3_BUCKET_NAME}/${req.file.key}`,
+          Key: `${process.env.S3_BUCKET_FOLDER_USER}/${newFileName}`,
+        })
+      );
+
+      // Deleta o arquivo original do S3
+      await s3.send(
+        new DeleteObjectCommand({
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: req.file.key,
+        })
+      );
+
+      // Atualiza o usuário com a URL da imagem
+      newUsuario.imagem = imageUrl;
+
+      // Atualiza o banco de dados com a URL da imagem
+      await newUsuario.save();
+    }
+
+    // Resposta com sucesso
     res.status(200).json({ message: "Usuario Cadastrado com sucesso", usuario: newUsuario });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -95,28 +155,51 @@ router.get("/me", authenticateToken, async (req, res) => {
 });
 
 // Alterar Usuario (PUT)
-router.put("/me", upload.single("imagem"), async (req, res) => {
+router.put("/me", authenticateToken, upload.single("imagem"), async (req, res) => {
   try {
     const { nome, email, senha } = req.body;
-    const hashedSenha = await bcrypt.hash(senha, 10);
-    const updatedData = {
-      nome,
-      email,
-      senha: hashedSenha,
-    };
+    const updatedData = { nome, email };
 
-    if (req.file) {
-      const newFileName = `${req.user.id}_${req.file.originalname}`;
-      const imageUrl = `${process.env.S3_BASE_URL}${process.env.S3_BUCKET_FOLDER_USER}/${newFileName}`;
-      updatedData.imagem = imageUrl;
+    // Se houver uma nova senha, a hash é atualizada
+    if (senha) {
+      updatedData.senha = await bcrypt.hash(senha, 10);
     }
 
+    // Se houver uma nova imagem, o nome será atualizado com o ID do usuário
+    if (req.file) {
+      const newFileName = `${req.user.id}_${req.file.originalname}`; // Nome com ID do usuário
+      const newImageUrl = `${process.env.S3_BASE_URL}${process.env.S3_BUCKET_FOLDER_USER}/${newFileName}`;
+
+      // Copia o arquivo para o novo nome no S3
+      await s3.send(
+        new CopyObjectCommand({
+          Bucket: process.env.S3_BUCKET_NAME,
+          CopySource: `${process.env.S3_BUCKET_NAME}/${req.file.key}`,
+          Key: `${process.env.S3_BUCKET_FOLDER_USER}/${newFileName}`,
+        })
+      );
+
+      // Deleta o arquivo original do S3
+      await s3.send(
+        new DeleteObjectCommand({
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: req.file.key,
+        })
+      );
+
+      // Atualiza a URL da imagem no banco de dados
+      updatedData.imagem = newImageUrl;
+    }
+
+    // Atualiza o usuário no banco de dados com os novos dados
     await Usuario.update(updatedData, { where: { id: req.user.id } });
-    res.status(200).json({ message: "Usuario Atualizado com sucesso" });
+    res.status(200).json({ message: "Usuário atualizado com sucesso" });
   } catch (error) {
+    console.error(error);
     res.status(400).json({ error: error.message });
   }
 });
+
 
 // Deletar Usuario (DELETE)
 router.delete("/me", authenticateToken, async (req, res) => {
