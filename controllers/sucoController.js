@@ -31,7 +31,8 @@ router.post("/add", upload.single("img1"), async (req, res) => {
       ingredientes,
       modo_de_preparo,
       beneficios,
-      diagnostico,
+      diagnostico,  // Expecting an array of diagnostico IDs
+      categorias    // Expecting an array of categoria IDs
     } = req.body;
 
     // Cria o suco no banco de dados
@@ -69,14 +70,30 @@ router.post("/add", upload.single("img1"), async (req, res) => {
       suco.img1 = imageUrl;
     }
 
-    // Associar diagnóstico ao suco na tabela Suco_Diagnostico
-    if (diagnostico) {
-      const diagnosticoObj = await Diagnostico.findByPk(diagnostico);
-      await Suco_Diagnostico.create({
-        fk_suco: suco.id,
-        fk_diagnostico: diagnosticoObj.id,
-      });
-      suco.diagnostico = diagnosticoObj;
+    // Associar diagnósticos ao suco na tabela Suco_Diagnostico
+    if (diagnostico && Array.isArray(diagnostico)) {
+      for (const diagId of diagnostico) {
+        const diagnosticoObj = await Diagnostico.findByPk(diagId);
+        if (diagnosticoObj) {
+          await Suco_Diagnostico.create({
+            fk_suco: suco.id,
+            fk_diagnostico: diagnosticoObj.id,
+          });
+        }
+      }
+    }
+
+    // Associar categorias ao suco na tabela Sucos_Categorias
+    if (categorias && Array.isArray(categorias)) {
+      for (const catId of categorias) {
+        const categoriaObj = await Categoria.findByPk(catId);
+        if (categoriaObj) {
+          await Sucos_Categorias.create({
+            suco_id: suco.id,
+            categoria_id: categoriaObj.id,
+          });
+        }
+      }
     }
 
     // Atualiza o suco no banco de dados com a URL da imagem
