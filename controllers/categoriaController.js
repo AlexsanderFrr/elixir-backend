@@ -9,7 +9,6 @@ router.post('/add', async (req, res) => {
     const newCategoria = await Categoria.create({ nome, descricao });
     res.status(200).json({ message: 'Categoria cadastrada com sucesso!' });
   } catch (error) {
-    console.error('Erro ao cadastrar categoria:', error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -20,7 +19,6 @@ router.get('/all', async (req, res) => {
     const categorias = await Categoria.findAll();
     res.status(200).json(categorias);
   } catch (error) {
-    console.error('Erro ao buscar categorias:', error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -32,7 +30,6 @@ router.get('/:id', async (req, res) => {
     const categoria = await Categoria.findByPk(id);
     res.status(200).json(categoria);
   } catch (error) {
-    console.error('Erro ao buscar categoria por ID:', error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -49,7 +46,6 @@ router.put('/:id', async (req, res) => {
     );
     res.status(200).json({ message: 'Categoria atualizada com sucesso' });
   } catch (error) {
-    console.error('Erro ao atualizar categoria:', error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -64,7 +60,6 @@ router.delete('/:id', async (req, res) => {
     });
     res.status(200).json({ message: 'Categoria excluída com sucesso!' });
   } catch (error) {
-    console.error('Erro ao excluir categoria:', error);
     res.status(400).json({ error: error.message });
   }
 });
