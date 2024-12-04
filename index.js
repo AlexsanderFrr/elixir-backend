@@ -18,6 +18,7 @@ const sucodiagnostico = require('./controllers/sucoDiagnosticoController.js');
 const allinformation = require('./controllers/allInformationController.js');
 const categoria = require('./controllers/categoriaController.js');
 const favorito = require('./controllers/favoritosController.js');
+const aprendizado = require('./controllers/aprendizadoController.js');
 
 app.use(bodyParser.json());
 app.use(passport.initialize());
@@ -34,6 +35,7 @@ app.use('/suco_diagnostico', sucodiagnostico);
 app.use('/allinformation', allinformation);
 app.use('/categoria', categoria);
 app.use('/favoritos', favorito);
+app.use('/aprendizado', aprendizado);
 
 const server = app.listen(port, () => {
   console.log(`Servidor rodando porta ${port}!`);
