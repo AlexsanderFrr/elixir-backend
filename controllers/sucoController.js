@@ -1,13 +1,21 @@
 // controllers/sucoController.js
-
 const express = require("express");
 const multer = require("multer");
-const { DeleteObjectCommand, CopyObjectCommand } = require("@aws-sdk/client-s3");
+const {
+  DeleteObjectCommand,
+  CopyObjectCommand,
+} = require("@aws-sdk/client-s3");
 const multerS3 = require("multer-s3");
 const s3 = require("../config/s3Setup");
 const router = express.Router();
 const { Op } = require("sequelize");
-const { Suco, Diagnostico, Suco_Diagnostico } = require("../models");
+const {
+  Suco,
+  Diagnostico,
+  Categoria,
+  Suco_Diagnostico,
+  Suco_Categoria,
+} = require("../models");
 require("dotenv").config();
 
 // Configuração do multer com multer-s3
@@ -31,7 +39,8 @@ router.post("/add", upload.single("img1"), async (req, res) => {
       ingredientes,
       modo_de_preparo,
       beneficios,
-      diagnostico  
+      diagnostico,
+      categoria,
     } = req.body;
 
     // Cria o suco no banco de dados
@@ -40,7 +49,7 @@ router.post("/add", upload.single("img1"), async (req, res) => {
       ingredientes,
       modo_de_preparo,
       beneficios,
-      img1: req.file.key,  // Salva o nome original do arquivo no banco de dados
+      img1: req.file.key, // Salva o nome original do arquivo no banco de dados
     });
 
     // Se a imagem foi carregada, renomeia e move para o S3 com o ID do suco
@@ -70,39 +79,29 @@ router.post("/add", upload.single("img1"), async (req, res) => {
     }
 
     // Associar diagnósticos ao suco na tabela Suco_Diagnostico
-    if (diagnosticos && Array.isArray(diagnosticos)) {
-      for (const diagnosticoId of diagnosticos) {
-        const diagnosticoObj = await Diagnostico.findByPk(diagnosticoId);
-    
-        if (!diagnosticoObj) {
-          console.error(`Diagnóstico com ID ${diagnosticoId} não encontrado.`);
-          continue; 
-        }
-    
-        await Suco_Diagnostico.create({
-          fk_suco: suco.id,
-          fk_diagnostico: diagnosticoObj.id,
-        });
-      }
-    } else if (typeof diagnostico === 'number') {
-      // Caso seja um único diagnóstico (não array)
+    if (diagnostico) {
       const diagnosticoObj = await Diagnostico.findByPk(diagnostico);
-    
-      if (diagnosticoObj) {
-        await Suco_Diagnostico.create({
-          fk_suco: suco.id,
-          fk_diagnostico: diagnosticoObj.id,
+      await Suco_Diagnostico.create({
+        fk_suco: suco.id,
+        fk_diagnostico: diagnosticoObj.id,
+      });
+      suco.diagnostico = diagnosticoObj;
+    }
+
+    // Associar a categoria ao suco na tabela Suco_Categoria
+    if (categoria) {
+      const categoriaObj = await Categoria.findByPk(categoria); 
+      if (categoriaObj) {
+        await Suco_Categoria.create({
+          suco_id: suco.id,
+          categoria_id: categoriaObj.id, 
         });
+        suco.categoria = categoriaObj;
       }
     }
-    
-
 
     // Atualiza o suco no banco de dados com a URL da imagem
-    await suco.update(
-      { img1: suco.img1 },
-      { where: { id: suco.id } }
-    );
+    await suco.update({ img1: suco.img1 }, { where: { id: suco.id } });
 
     // Retorna o suco com sucesso
     res.status(200).json({ message: "Suco Cadastrado com sucesso", suco });
