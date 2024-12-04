@@ -7,7 +7,7 @@ const multerS3 = require("multer-s3");
 const s3 = require("../config/s3Setup");
 const router = express.Router();
 const { Op } = require("sequelize");
-const { Suco, Diagnostico, Suco_Diagnostico, sequelize } = require("../models");
+const { Suco, Diagnostico, Suco_Diagnostico } = require("../models");
 require("dotenv").config();
 
 // Configuração do multer com multer-s3
@@ -31,8 +31,7 @@ router.post("/add", upload.single("img1"), async (req, res) => {
       ingredientes,
       modo_de_preparo,
       beneficios,
-      diagnostico,  // Expecting an array of diagnostico IDs
-      categorias    // Expecting an array of categoria IDs
+      diagnostico  
     } = req.body;
 
     // Cria o suco no banco de dados
@@ -71,30 +70,33 @@ router.post("/add", upload.single("img1"), async (req, res) => {
     }
 
     // Associar diagnósticos ao suco na tabela Suco_Diagnostico
-    if (diagnostico && Array.isArray(diagnostico)) {
-      for (const diagId of diagnostico) {
-        const diagnosticoObj = await Diagnostico.findByPk(diagId);
-        if (diagnosticoObj) {
-          await Suco_Diagnostico.create({
-            fk_suco: suco.id,
-            fk_diagnostico: diagnosticoObj.id,
-          });
+    if (diagnosticos && Array.isArray(diagnosticos)) {
+      for (const diagnosticoId of diagnosticos) {
+        const diagnosticoObj = await Diagnostico.findByPk(diagnosticoId);
+    
+        if (!diagnosticoObj) {
+          console.error(`Diagnóstico com ID ${diagnosticoId} não encontrado.`);
+          continue; 
         }
+    
+        await Suco_Diagnostico.create({
+          fk_suco: suco.id,
+          fk_diagnostico: diagnosticoObj.id,
+        });
+      }
+    } else if (typeof diagnostico === 'number') {
+      // Caso seja um único diagnóstico (não array)
+      const diagnosticoObj = await Diagnostico.findByPk(diagnostico);
+    
+      if (diagnosticoObj) {
+        await Suco_Diagnostico.create({
+          fk_suco: suco.id,
+          fk_diagnostico: diagnosticoObj.id,
+        });
       }
     }
+    
 
-    // Associar categorias ao suco na tabela Sucos_Categorias
-    if (categorias && Array.isArray(categorias)) {
-      for (const catId of categorias) {
-        const categoriaObj = await Categoria.findByPk(catId);
-        if (categoriaObj) {
-          await Sucos_Categorias.create({
-            suco_id: suco.id,
-            categoria_id: categoriaObj.id,
-          });
-        }
-      }
-    }
 
     // Atualiza o suco no banco de dados com a URL da imagem
     await suco.update(
