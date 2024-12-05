@@ -14,7 +14,7 @@ const {
   Diagnostico,
   Categoria,
   Suco_Diagnostico,
-  Suco_Categoria,
+  Sucos_Categorias,
 } = require("../models");
 require("dotenv").config();
 
@@ -91,14 +91,13 @@ router.post("/add", upload.single("img1"), async (req, res) => {
     // Associar a categoria ao suco na tabela Suco_Categoria
     if (categoria) {
       const categoriaObj = await Categoria.findByPk(categoria); 
-      if (categoriaObj) {
-        await Suco_Categoria.create({
+        await Sucos_Categorias.create({
           suco_id: suco.id,
           categoria_id: categoriaObj.id, 
         });
         suco.categoria = categoriaObj;
       }
-    }
+    
 
     // Atualiza o suco no banco de dados com a URL da imagem
     await suco.update({ img1: suco.img1 }, { where: { id: suco.id } });
@@ -118,6 +117,44 @@ router.get("/all", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Erro interno no servidor" });
+  }
+});
+
+// Endpoint para filtrar sucos com base em categoria e diagnóstico
+router.get("/filter", async (req, res) => {
+  try {
+    const { categoria, diagnostico } = req.query;
+
+    // Construir a consulta para filtrar sucos
+    let query = {
+      include: []
+    };
+
+    // Filtro por categoria
+    if (categoria) {
+      query.include.push({
+        model: Categoria,
+        where: { nome: categoria },
+        through: { attributes: [] }  // Para evitar retornar dados da tabela de junção
+      });
+    }
+
+    // Filtro por diagnóstico
+    if (diagnostico) {
+      query.include.push({
+        model: Diagnostico,
+        where: { nome: diagnostico },
+        through: { attributes: [] }  // Para evitar retornar dados da tabela de junção
+      });
+    }
+
+    // Buscar os sucos com os filtros
+    const sucos = await Suco.findAll(query);
+
+    // Retornar os sucos filtrados
+    res.status(200).json(sucos);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
 

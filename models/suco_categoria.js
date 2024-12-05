@@ -2,7 +2,6 @@
 const {
   Model
 } = require('sequelize');
-
 module.exports = (sequelize, DataTypes) => {
   class Sucos_Categorias extends Model {
     /**
@@ -12,27 +11,16 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // Define a associação entre Suco e Categoria
-      Sucos_Categorias.belongsTo(models.Suco, { foreignKey: 'suco_id' });
-      Sucos_Categorias.belongsTo(models.Categoria, { foreignKey: 'categoria_id' });
     }
   }
-
   // Inicializando o modelo Suco_Categoria com seus campos
   Sucos_Categorias.init({
-    suco_id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      allowNull: false
-    },
-    categoria_id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      allowNull: false
-    }
+        suco_id: DataTypes.INTEGER,
+        categoria_id: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'Sucos_Categorias',
-    timestamps: false, // Não temos campos de timestamp na tabela de associação
+    timestamps: false, 
   });
 
   return Sucos_Categorias;
