@@ -14,7 +14,7 @@ const {
   Diagnostico,
   Categoria,
   Suco_Diagnostico,
-  Suco_Categoria,
+  Sucos_Categorias,
 } = require("../models");
 require("dotenv").config();
 
@@ -91,14 +91,13 @@ router.post("/add", upload.single("img1"), async (req, res) => {
     // Associar a categoria ao suco na tabela Suco_Categoria
     if (categoria) {
       const categoriaObj = await Categoria.findByPk(categoria); 
-      if (categoriaObj) {
-        await Suco_Categoria.create({
+        await Sucos_Categorias.create({
           suco_id: suco.id,
           categoria_id: categoriaObj.id, 
         });
         suco.categoria = categoriaObj;
       }
-    }
+    
 
     // Atualiza o suco no banco de dados com a URL da imagem
     await suco.update({ img1: suco.img1 }, { where: { id: suco.id } });
