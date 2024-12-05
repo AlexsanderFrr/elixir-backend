@@ -120,6 +120,44 @@ router.get("/all", async (req, res) => {
   }
 });
 
+// Endpoint para filtrar sucos com base em categoria e diagnóstico
+router.get("/filter", async (req, res) => {
+  try {
+    const { categoria, diagnostico } = req.query;
+
+    // Construir a consulta para filtrar sucos
+    let query = {
+      include: []
+    };
+
+    // Filtro por categoria
+    if (categoria) {
+      query.include.push({
+        model: Categoria,
+        where: { nome: categoria },
+        through: { attributes: [] }  // Para evitar retornar dados da tabela de junção
+      });
+    }
+
+    // Filtro por diagnóstico
+    if (diagnostico) {
+      query.include.push({
+        model: Diagnostico,
+        where: { nome: diagnostico },
+        through: { attributes: [] }  // Para evitar retornar dados da tabela de junção
+      });
+    }
+
+    // Buscar os sucos com os filtros
+    const sucos = await Suco.findAll(query);
+
+    // Retornar os sucos filtrados
+    res.status(200).json(sucos);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // Obter suco por ID
 router.get("/:id", async (req, res) => {
   try {
