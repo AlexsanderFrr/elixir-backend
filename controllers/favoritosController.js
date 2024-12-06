@@ -42,31 +42,33 @@ router.post("/add", authenticateToken, async (req, res) => {
 
 // Obter todos os favoritos do usuário autenticado
 router.get("/all", authenticateToken, async (req, res) => {
-    try {
-      // Recupera todos os sucos favoritos do usuário autenticado
-      const favoritos = await Favorito.findAll({
-        where: {
-          usuario_id: req.user.id,
+  try {
+    console.log('Usuário autenticado:', req.user); // Log do usuário autenticado
+
+    const favoritos = await Favorito.findAll({
+      where: {
+        usuario_id: req.user.id, // Certifique-se de que `req.user` tem o ID correto
+      },
+      include: [
+        {
+          model: Suco,
+          as: 'suco', // Alias correto
+          attributes: ['id', 'nome', 'ingredientes', 'modo_de_preparo', 'beneficios', 'img1'], // Dados do suco
         },
-        include: [
-          {
-            model: Suco,
-            as: 'suco', // Usando o alias correto 'suco'
-            attributes: ['id', 'nome', 'ingredientes', 'modo_de_preparo', 'beneficios', 'img1'] // Inclui os dados do suco
-          }
-        ],
-      });
-  
-      if (favoritos.length === 0) {
-        return res.status(404).json({ message: "Nenhum favorito encontrado" });
-      }
-  
-      res.status(200).json(favoritos);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
+      ],
+    });
+
+    if (favoritos.length === 0) {
+      console.warn('Nenhum favorito encontrado para o usuário:', req.user.id); // Log caso não encontre favoritos
+      return res.status(404).json({ message: "Nenhum favorito encontrado" });
     }
-  });
-  
+
+    res.status(200).json(favoritos);
+  } catch (error) {
+    console.error('Erro ao buscar favoritos:', error); // Log detalhado do erro
+    res.status(400).json({ error: error.message });
+  }
+});
 
 // Remover suco dos favoritos (protege com autenticação)
 router.delete("/delete/:sucoId", authenticateToken, async (req, res) => {
