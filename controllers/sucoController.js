@@ -172,7 +172,9 @@ router.get("/filter", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const id = req.params.id;
-    const suco = await Suco.findByPk(id);
+    const suco = await SucoView.findOne({
+      where: { suco_id: id } // Aqui buscamos pelo id do suco na view
+    });
 
     if (!suco) {
       throw new Error("Receita não encontrada");
