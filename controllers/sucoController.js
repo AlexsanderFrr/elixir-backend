@@ -15,6 +15,7 @@ const {
   Categoria,
   Suco_Diagnostico,
   Sucos_Categorias,
+  SucoView,
 } = require("../models");
 require("dotenv").config();
 
@@ -110,9 +111,10 @@ router.post("/add", upload.single("img1"), async (req, res) => {
 });
 
 // Obter todos os sucos
+// Obter todos os sucos
 router.get("/all", async (req, res) => {
   try {
-    const sucos = await Suco.findAll();
+    const sucos = await SucoView.findAll();
     res.status(200).json(sucos);
   } catch (error) {
     console.error(error);
@@ -120,6 +122,7 @@ router.get("/all", async (req, res) => {
   }
 });
 
+//Buscar bebidas com base de filtro
 router.get("/filter", async (req, res) => {
   try {
     const { categoria, diagnostico } = req.query;
