@@ -91,7 +91,7 @@ router.post("/add", upload.single("img1"), async (req, res) => {
 
     // Associar a categoria ao suco na tabela Suco_Categoria
     if (categoria) {
-      const categoriaObj = await Categoria.findByPk(categoria); 
+      const categoriaObj = await Categoria.findByPk(categoria[0]); 
         await Sucos_Categorias.create({
           suco_id: suco.id,
           categoria_id: categoriaObj.id, 
