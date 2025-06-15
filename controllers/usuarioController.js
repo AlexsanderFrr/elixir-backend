@@ -28,10 +28,11 @@ const upload = multer({
 router.post("/add", upload.single("imagem"), async (req, res) => {
   try {
     const { nome, email, senha } = req.body;
+    const tipo = "comum";// força o tipo como "comum"
     const hashedSenha = await bcrypt.hash(senha, 10);
 
     // Criação do usuário
-    const newUsuario = await Usuario.create({ nome, email, senha: hashedSenha });
+    const newUsuario = await Usuario.create({ nome, email, senha: hashedSenha, tipo });
 
     if (req.file) {
       const newFileName = `${newUsuario.id}_${req.file.originalname}`; // Nome correto da imagem com o ID
@@ -113,21 +114,52 @@ router.post("/add", upload.single("imagem"), async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { email, senha } = req.body;
-    const usuario = await Usuario.findOne({ where: { email } });
+    
+    // 1. Busca o usuário incluindo o campo 'tipo'
+    const usuario = await Usuario.findOne({ 
+      where: { email },
+      attributes: ['id', 'nome', 'email', 'senha', 'tipo', 'imagem'] // Inclua todos os campos necessários
+    });
 
     if (!usuario) {
       return res.status(400).json({ message: "Email ou senha inválidos" });
     }
 
+    // 2. Verifica a senha
     const isPasswordValid = await bcrypt.compare(senha, usuario.senha);
     if (!isPasswordValid) {
       return res.status(400).json({ message: "Email ou senha inválidos" });
     }
 
-    const token = jwt.sign({ id: usuario.id }, process.env.SECRET_KEY, { expiresIn: '1h' });
-    res.status(200).json({ message: "Autenticado com sucesso", token });
+    // 3. Cria o token com mais informações do usuário
+    const token = jwt.sign(
+      { 
+        id: usuario.id,
+        email: usuario.email,
+        tipo: usuario.tipo  // Inclui o tipo do usuário no token
+      }, 
+      process.env.SECRET_KEY, 
+      { expiresIn: '1h' }
+    );
+
+    // 4. Retorna informações relevantes (sem a senha)
+    const userData = {
+      id: usuario.id,
+      nome: usuario.nome,
+      email: usuario.email,
+      tipo: usuario.tipo,
+      imagem: usuario.imagem,
+      token
+    };
+
+    res.status(200).json({ 
+      message: "Autenticado com sucesso", 
+      ...userData 
+    });
+
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error("Erro no login:", error);
+    res.status(500).json({ error: "Erro interno no servidor durante o login" });
   }
 });
 
