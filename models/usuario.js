@@ -17,7 +17,8 @@ module.exports = (sequelize, DataTypes) => {
   tipo: {
     type: DataTypes.STRING,
     allowNull: false,
-    defaultValue: 'comum', // 'admin' ou 'comum'
+    type: DataTypes.ENUM("comum", "admin"),
+    defaultValue: "comum"
   }
 }, {
   sequelize,
