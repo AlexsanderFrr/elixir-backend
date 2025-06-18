@@ -200,7 +200,16 @@ router.get("/title/:title", async (req, res) => {
     });
 
     if (sucos.length > 0) {
-      res.json(sucos);
+      const sucosFormatados = sucos.map((suco) => ({
+        suco_id: suco.id,
+        suco_nome: suco.nome,
+        ingredientes: suco.ingredientes,
+        modo_de_preparo: suco.modo_de_preparo,
+        beneficios: suco.beneficios,
+        img1: suco.img1,
+      }));
+
+      res.json(sucosFormatados);
     } else {
       throw new Error(
         "Nenhuma receita de suco encontrada com o título fornecido"
