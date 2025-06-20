@@ -9,15 +9,22 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
 
-  Usuario.init({
-    nome: DataTypes.STRING,
-    email: DataTypes.STRING,
-    senha: DataTypes.STRING,
-    imagem: DataTypes.STRING, 
-  }, {
-    sequelize,
-    modelName: 'Usuario',
-  });
+ Usuario.init({
+  nome: DataTypes.STRING,
+  email: DataTypes.STRING,
+  senha: DataTypes.STRING,
+  imagem: DataTypes.STRING,
+  tipo: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    type: DataTypes.ENUM("comum", "admin"),
+    defaultValue: "comum"
+  }
+}, {
+  sequelize,
+  modelName: 'Usuario',
+});
+
 
   return Usuario;
 };

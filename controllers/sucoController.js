@@ -1,13 +1,22 @@
 // controllers/sucoController.js
-
 const express = require("express");
 const multer = require("multer");
-const { DeleteObjectCommand, CopyObjectCommand } = require("@aws-sdk/client-s3");
+const {
+  DeleteObjectCommand,
+  CopyObjectCommand,
+} = require("@aws-sdk/client-s3");
 const multerS3 = require("multer-s3");
 const s3 = require("../config/s3Setup");
 const router = express.Router();
 const { Op } = require("sequelize");
-const { Suco, Diagnostico, Suco_Diagnostico, sequelize } = require("../models");
+const {
+  Suco,
+  Diagnostico,
+  Categoria,
+  Suco_Diagnostico,
+  Sucos_Categorias,
+  SucoView,
+} = require("../models");
 require("dotenv").config();
 
 // Configuração do multer com multer-s3
@@ -31,8 +40,8 @@ router.post("/add", upload.single("img1"), async (req, res) => {
       ingredientes,
       modo_de_preparo,
       beneficios,
-      diagnostico,  // Expecting an array of diagnostico IDs
-      categorias    // Expecting an array of categoria IDs
+      diagnostico,
+      categoria,
     } = req.body;
 
     // Cria o suco no banco de dados
@@ -41,7 +50,7 @@ router.post("/add", upload.single("img1"), async (req, res) => {
       ingredientes,
       modo_de_preparo,
       beneficios,
-      img1: req.file.key,  // Salva o nome original do arquivo no banco de dados
+      img1: req.file.key, // Salva o nome original do arquivo no banco de dados
     });
 
     // Se a imagem foi carregada, renomeia e move para o S3 com o ID do suco
@@ -71,36 +80,28 @@ router.post("/add", upload.single("img1"), async (req, res) => {
     }
 
     // Associar diagnósticos ao suco na tabela Suco_Diagnostico
-    if (diagnostico && Array.isArray(diagnostico)) {
-      for (const diagId of diagnostico) {
-        const diagnosticoObj = await Diagnostico.findByPk(diagId);
-        if (diagnosticoObj) {
-          await Suco_Diagnostico.create({
-            fk_suco: suco.id,
-            fk_diagnostico: diagnosticoObj.id,
-          });
-        }
-      }
+    if (diagnostico) {
+      const diagnosticoObj = await Diagnostico.findByPk(diagnostico);
+      await Suco_Diagnostico.create({
+        fk_suco: suco.id,
+        fk_diagnostico: diagnosticoObj.id,
+      });
+      suco.diagnostico = diagnosticoObj;
     }
 
-    // Associar categorias ao suco na tabela Sucos_Categorias
-    if (categorias && Array.isArray(categorias)) {
-      for (const catId of categorias) {
-        const categoriaObj = await Categoria.findByPk(catId);
-        if (categoriaObj) {
-          await Sucos_Categorias.create({
-            suco_id: suco.id,
-            categoria_id: categoriaObj.id,
-          });
-        }
+    // Associar a categoria ao suco na tabela Suco_Categoria
+    if (categoria) {
+      const categoriaObj = await Categoria.findByPk(categoria[0]); 
+        await Sucos_Categorias.create({
+          suco_id: suco.id,
+          categoria_id: categoriaObj.id, 
+        });
+        suco.categoria = categoriaObj;
       }
-    }
+    
 
     // Atualiza o suco no banco de dados com a URL da imagem
-    await suco.update(
-      { img1: suco.img1 },
-      { where: { id: suco.id } }
-    );
+    await suco.update({ img1: suco.img1 }, { where: { id: suco.id } });
 
     // Retorna o suco com sucesso
     res.status(200).json({ message: "Suco Cadastrado com sucesso", suco });
@@ -110,9 +111,10 @@ router.post("/add", upload.single("img1"), async (req, res) => {
 });
 
 // Obter todos os sucos
+// Obter todos os sucos
 router.get("/all", async (req, res) => {
   try {
-    const sucos = await Suco.findAll();
+    const sucos = await SucoView.findAll();
     res.status(200).json(sucos);
   } catch (error) {
     console.error(error);
@@ -120,11 +122,59 @@ router.get("/all", async (req, res) => {
   }
 });
 
+//Buscar bebidas com base de filtro
+router.get("/filter", async (req, res) => {
+  try {
+    const { categoria, diagnostico } = req.query;
+
+    // Construir a consulta para filtrar sucos
+    let query = {
+      include: [],
+      where: {}
+    };
+
+    // Filtro por categoria
+    if (categoria) {
+      query.include.push({
+        model: Categoria,
+        where: { nome: categoria },
+        through: { attributes: [] }  // Para evitar retornar dados da tabela de junção
+      });
+    }
+
+    // Filtro por diagnóstico
+    if (diagnostico) {
+      query.include.push({
+        model: Diagnostico,
+        where: { nome_da_condicao: diagnostico },
+        through: { attributes: [] }  // Para evitar retornar dados da tabela de junção
+      });
+    }
+
+    // Buscar os sucos com os filtros
+    const sucos = await Suco.findAll(query);
+
+    // Verificar se os filtros foram aplicados e se houve resultados
+    if ((categoria && sucos.length === 0) || (diagnostico && sucos.length === 0)) {
+      //const sucos = await Suco.findAll(query);
+      return res.status(404).json({ message: "Nenhum suco encontrado para os filtros aplicados." });
+    }
+
+    // Retornar os sucos filtrados
+    res.status(200).json(sucos);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+
 // Obter suco por ID
 router.get("/:id", async (req, res) => {
   try {
     const id = req.params.id;
-    const suco = await Suco.findByPk(id);
+    const suco = await SucoView.findOne({
+      where: { suco_id: id } // Aqui buscamos pelo id do suco na view
+    });
 
     if (!suco) {
       throw new Error("Receita não encontrada");
@@ -150,7 +200,16 @@ router.get("/title/:title", async (req, res) => {
     });
 
     if (sucos.length > 0) {
-      res.json(sucos);
+      const sucosFormatados = sucos.map((suco) => ({
+        suco_id: suco.id,
+        suco_nome: suco.nome,
+        ingredientes: suco.ingredientes,
+        modo_de_preparo: suco.modo_de_preparo,
+        beneficios: suco.beneficios,
+        img1: suco.img1,
+      }));
+
+      res.json(sucosFormatados);
     } else {
       throw new Error(
         "Nenhuma receita de suco encontrada com o título fornecido"
