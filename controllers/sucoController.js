@@ -243,18 +243,112 @@ router.get("/with-diagnostico/:id", async (req, res) => {
   }
 });
 
-// Atualizar suco
 router.put("/:id", upload.single("img1"), async (req, res) => {
   try {
-    const { nome, ingredientes, modo_de_preparo, beneficios } = req.body;
-    const img1 = req.file ? req.file.location : undefined;
+    const sucoId = req.params.id;
+    const {
+      nome,
+      ingredientes,
+      modo_de_preparo,
+      beneficios,
+      diagnostico,  // Mantido como está no body da requisição
+      categoria    // Mantido como está no body da requisição
+    } = req.body;
 
-    await Suco.update(
-      { nome, ingredientes, modo_de_preparo, beneficios, img1 },
-      { where: { id: req.params.id } }
-    );
-    res.status(200).json({ message: "Suco atualizado com sucesso!" });
+    // 1. Buscar o suco existente
+    const suco = await Suco.findByPk(sucoId);
+    if (!suco) {
+      return res.status(404).json({ error: "Suco não encontrado" });
+    }
+
+    // 2. Validar os IDs relacionados
+    if (diagnostico !== undefined && diagnostico !== null) {
+      const diagnosticoExists = await Diagnostico.findByPk(diagnostico);
+      if (!diagnosticoExists) {
+        return res.status(400).json({ error: "Diagnóstico não encontrado" });
+      }
+    }
+
+    if (categoria !== undefined) {
+      const categoriaArray = Array.isArray(categoria) ? categoria : [categoria];
+      const categorias = await Categoria.findAll({ 
+        where: { id: categoriaArray } 
+      });
+      if (categoriaArray.length > 0 && categorias.length !== categoriaArray.length) {
+        return res.status(400).json({ error: "Uma ou mais categorias não foram encontradas" });
+      }
+    }
+
+    // 3. Atualizar dados básicos
+    await suco.update({
+      nome,
+      ingredientes,
+      modo_de_preparo,
+      beneficios
+    });
+
+    // 4. Tratamento da imagem
+    if (req.file) {
+      const newFileName = `${sucoId}_${req.file.originalname}`;
+      const imageUrl = `${process.env.S3_BASE_URL}${process.env.S3_BUCKET_FOLDER_SUCO}/${newFileName}`;
+
+      await s3.send(
+        new CopyObjectCommand({
+          Bucket: process.env.S3_BUCKET_NAME,
+          CopySource: `${process.env.S3_BUCKET_NAME}/${req.file.key}`,
+          Key: `${process.env.S3_BUCKET_FOLDER_SUCO}/${newFileName}`,
+        })
+      );
+
+      await s3.send(
+        new DeleteObjectCommand({
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: req.file.key,
+        })
+      );
+
+      await suco.update({ img1: imageUrl });
+    }
+
+    // 5. Atualizar diagnóstico (se fornecido)
+    if (diagnostico !== undefined) {
+      await Suco_Diagnostico.destroy({ where: { fk_suco: sucoId } });
+      
+      if (diagnostico) {
+        await Suco_Diagnostico.create({
+          fk_suco: sucoId,
+          fk_diagnostico: diagnostico,
+        });
+      }
+    }
+
+    // 6. Atualizar categorias (se fornecido)
+    if (categoria !== undefined) {
+      await Sucos_Categorias.destroy({ where: { suco_id: sucoId } });
+      
+      const categoriaArray = Array.isArray(categoria) ? categoria : [categoria];
+      if (categoriaArray.length > 0) {
+        const categoriasParaAssociar = categoriaArray.map(catId => ({
+          suco_id: sucoId,
+          categoria_id: catId
+        }));
+        
+        await Sucos_Categorias.bulkCreate(categoriasParaAssociar);
+      }
+    }
+
+    // 7. Buscar dados atualizados
+    const sucoAtualizado = await SucoView.findOne({
+      where: { suco_id: sucoId }
+    });
+
+    res.status(200).json({ 
+      message: "Suco atualizado com sucesso!", 
+      suco: sucoAtualizado 
+    });
+
   } catch (error) {
+    console.error("Erro ao atualizar suco:", error);
     res.status(400).json({ error: error.message });
   }
 });
