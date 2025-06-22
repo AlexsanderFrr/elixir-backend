@@ -22,12 +22,13 @@ const Ingrediente = require ('../models').Ingrediente;
 // Adicionar Ingrediente
 router.post('/add', upload.single('img'), async (req, res) => {
     try {
-        const { nome, beneficios } = req.body;
-
+        const { nome, descricao } = req.body;
+        console.log(req.body)
+        console.log(nome)
         // Use o novo nome do arquivo que inclui o identificador único
-        const newIngrediente = await Ingrediente.create({ nome, beneficios, img: req.file.filename });
+        const newIngrediente = await Ingrediente.create({ nome, descricao, img: req.file.filename });
 
-        res.status(200).json({ message: 'Ingrediente Cadastrado com sucesso' });
+        res.status(200).json({ message: 'Ingrediente Cadastrado com sucesso'});
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
